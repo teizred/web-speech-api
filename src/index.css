@@ -1,0 +1,18 @@
+@import "tailwindcss/preflight";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* RESET CSS: On enlève les marges par défaut pour avoir le contrôle */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* BODY: La structure principale de la page */
+body {
+    font-family: Arial, sans-serif;
+    display: flex; /* Utilisation de Flexbox pour coller le footer en bas */
+    flex-direction: column;
+    min-height: 100vh; /* Prend au moins toute la hauteur de l'écran */
+}
