@@ -2,7 +2,7 @@ import SpeechTest from "./components/SpeechTest";
 
 const Home = () => {
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div>
         <SpeechTest />
     </div>
   )

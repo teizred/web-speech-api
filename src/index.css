@@ -1,6 +1,4 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import "tailwindcss";
 
 /* RESET CSS: On enlève les marges par défaut pour avoir le contrôle */
 * {
