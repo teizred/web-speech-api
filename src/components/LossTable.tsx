@@ -24,7 +24,7 @@ const CATEGORIES = [
   },
   {
     label: "🥪 Sandwichs",
-    products: ["CBO Smoky Ranch", "McCrispy Smoky Ranch Bacon", "McWrap Smoky Ranch", "Big Mac Bacon", "Big Mac", "McVeggie", "McWrap Veggie", "Filet-O-Fish", "McFish Mayo", "McFish", "Fish New York", "Double Fish New York", "P'tit Chicken", "Croque McDo", "McChicken", "Cheeseburger", "Egg & Cheese McMuffin", "CBO", "Hamburger", "McWrap New York & Poulet Bacon", "Royal Cheese", "P'tit Wrap Ranch", "Egg & Bacon McMuffin", "Double Cheeseburger", "Royal Deluxe", "Royal Bacon", "Big Tasty 1 steak", "Big Tasty 2 steaks", "280 Original", "Double Cheese Bacon", "Big Arch", "McCrispy Bacon", "McCrispy", "Bacon & Beef McMuffin"],
+    products: ["CBO Smoky Ranch", "McCrispy Smoky Ranch Bacon", "McWrap Smoky Ranch", "Big Mac Bacon", "Big Mac", "McVeggie", "McWrap Veggie", "Filet-O-Fish", "McFish Mayo", "McFish", "Fish New York", "Double Fish New York", "P'tit Chicken", "Croque McDo", "McChicken", "Cheeseburger", "Egg & Cheese McMuffin", "CBO", "Hamburger", "McWrap New York", "Royal Cheese", "P'tit Wrap Ranch","Egg & Cheese", "Egg & Bacon", "Double Cheeseburger", "Royal Deluxe", "Royal Bacon", "Big Tasty 1 steak", "Big Tasty 2 steaks", "280 Original", "Double Cheese Bacon", "Big Arch", "McCrispy Bacon", "McCrispy", "Bacon & Beef McMuffin"],
   },
   {
     label: "🍟 Accompagnements",
