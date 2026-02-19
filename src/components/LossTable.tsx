@@ -28,16 +28,27 @@ const CATEGORIES = [
   },
   {
     label: "🍟 Accompagnements",
-    products: ["Frites Cheddar", "Frites Bacon", "Frites", "Potatoes Cheddar", "Potatoes Bacon", "Potatoes", "Wavy Fries"],
+    products: ["Frites", "Potatoes", "Wavy Fries", "Frites Cheddar", "Frites Bacon", "Potatoes Cheddar", "Potatoes Bacon"],
   },
   {
     label: "🥤 Boissons",
-    products: ["Eau Plate", "Eau Pétillante", "Oasis Tropical", "Green Apple Sprite", "Coca-Cola Sans-Sucres", "Coca-Cola Cherry Zéro", "Coca-Cola", "Sprite Sans-Sucres", "Fanta Sans-Sucres", "Minute Maid Orange", "Lipton Ice Tea", "P'tit Nectar Pomme", "Capri-Sun Tropical", "Americano Glacé", "Café Latte Glacé Gourmand", "Café Latte Glacé", "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille", "Smoothie Mangue Papaye", "Smoothie Banane Fraise", "Jus d'Orange"],
+    products: ["Coca-Cola", "Coca-Cola Sans-Sucres", "Coca-Cola Cherry Zéro", "Fanta Sans-Sucres", "Lipton Ice Tea", "Sprite Sans-Sucres", "Oasis Tropical", "Green Apple Sprite", "Eau Plate", "Eau Pétillante", "Minute Maid Orange", "P'tit Nectar Pomme", "Capri-Sun Tropical"],
   },
   {
     label: "☕ McCafé",
-    products: ["Espresso Décaféiné", "Double Espresso", "Espresso", "Ristretto", "Café Allongé Décaféiné", "Café Allongé", "Thé", "Café Latté", "Cappuccino", "Café Latte Gourmand", "Chocolat Chaud Gourmand", "Chocolat Chaud"],
+    products: ["Ristretto", "Espresso", "Double Espresso", "Café Allongé", "Café Latté", "Cappuccino", "Café Latte Glacé", "Café Latte Glacé Gourmand", "Americano Glacé", "Thé Earl Grey", "Thé Vert Menthe", "Thé Citron Gingembre", "Chocolat Chaud", "Chocolat Chaud Gourmand", "Espresso Décaféiné", "Café Allongé Décaféiné", "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille", "Smoothie Mangue Papaye", "Smoothie Banane Fraise"],
   },
+];
+
+// Boissons sans taille
+const TAILLE_UNIQUE_BOISSONS = ["Capri-Sun Tropical", "P'tit Nectar Pomme"];
+// Boissons seulement Moyen/Grand
+const MOYEN_GRAND_BOISSONS = ["Eau Plate", "Eau Pétillante"];
+// McCafé sans taille
+const TAILLE_UNIQUE_MCCAFE = [
+  "Espresso", "Ristretto", "Double Espresso", "Espresso Décaféiné",
+  "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille",
+  "Smoothie Mangue Papaye", "Smoothie Banane Fraise",
 ];
 
 export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
@@ -61,41 +72,44 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
 
     try {
       if (currentLoss) {
-        // UPDATE
         const newQuantity = currentLoss.quantity + delta;
-
-        if (newQuantity <= 0) {
-          await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: 0 }),
-          });
-        } else {
-          await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: newQuantity }),
-          });
-        }
+        await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: Math.max(0, newQuantity) }),
+        });
       } else if (delta > 0) {
-        // CREATE MANUAL
         await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses/manual", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            product, 
-            quantity: delta,
-            size 
-          }),
+          body: JSON.stringify({ product, quantity: delta, size }),
         });
       }
-      
       onUpdate();
     } catch (e) {
       console.error(e);
     } finally {
       setLoadingId(null);
     }
+  };
+
+  const getSizes = (productName: string, lowerCat: string): (string | null)[] => {
+    // Boissons taille unique (pas de label de taille)
+    if (TAILLE_UNIQUE_BOISSONS.includes(productName)) return [null];
+    // Frites : Petit / Moyen / Grand
+    if (productName === "Frites") return ["Petit", "Moyen", "Grand"];
+    // Potatoes & Wavy Fries : Moyen / Grand
+    if (productName === "Potatoes" || productName === "Wavy Fries") return ["Moyen", "Grand"];
+    // Eaux : Moyen / Grand
+    if (lowerCat.includes("boissons") && MOYEN_GRAND_BOISSONS.includes(productName)) return ["Moyen", "Grand"];
+    // Autres boissons : Petit / Moyen / Grand
+    if (lowerCat.includes("boissons")) return ["Petit", "Moyen", "Grand"];
+    // McCafé taille unique
+    if (lowerCat.includes("mccafé") && TAILLE_UNIQUE_MCCAFE.includes(productName)) return [null];
+    // McCafé : Moyen / Grand
+    if (lowerCat.includes("mccafé")) return ["Moyen", "Grand"];
+    // Tous les autres : pas de taille
+    return [null];
   };
 
   return (
@@ -111,25 +125,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {group.products.flatMap((productName) => {
               const lowerCat = group.label.toLowerCase();
-
-              const tailleUniqueBoissons = [
-                "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille",
-                "Smoothie Mangue Papaye", "Smoothie Banane Fraise",
-                "Capri-Sun Tropical", "P'tit Nectar Pomme",
-              ];
-
-              const needsSizes =
-                (productName === "Frites" || productName === "Potatoes" || productName === "Wavy Fries" || lowerCat.includes("boissons")) &&
-                !productName.includes("Cheddar") &&
-                !productName.includes("Bacon") &&
-                !["Espresso", "Ristretto", "Double Espresso"].includes(productName) &&
-                !tailleUniqueBoissons.includes(productName);
-
-              const needsMcCafeSizes =
-                lowerCat.includes("mccafé") && !["Espresso", "Ristretto", "Double Espresso", "Espresso Décaféiné", ].includes(productName);
-
-              const sizes: (string | null)[] =
-                needsSizes || needsMcCafeSizes ? ["Moyen", "Grand"] : [null];
+              const sizes = getSizes(productName, lowerCat);
 
               return sizes.map((size) => {
                 const key = `${productName}__${size || "null"}`;
