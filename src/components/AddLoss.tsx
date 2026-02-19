@@ -41,8 +41,12 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
 
       if (!response.ok) throw new Error(data.error);
 
-      setSuccess(`${data.length} perte(s) enregistrée(s) !`);
-      onLossAdded(); // refresh la table
+      if (data.length === 0) {
+        setError("Aucune taille précisée, veuillez réessayer.");
+      } else {
+        setSuccess(`${data.length} perte(s) enregistrée(s) !`);
+        onLossAdded();
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
