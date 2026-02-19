@@ -93,6 +93,42 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
     }
   };
 
+  const handleEditSave = async (product: string, size: string | null, currentLoss: Loss | undefined, newQuantity: number) => {
+    if (newQuantity < 0) return;
+
+    const key = `${product}__${size || "null"}`;
+    setLoadingId(key);
+
+    try {
+      if (currentLoss) {
+        if (newQuantity === 0) {
+           await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quantity: 0 }),
+          });
+        } else {
+           await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ quantity: newQuantity }),
+          });
+        }
+      } else if (newQuantity > 0) {
+        await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses/manual", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ product, quantity: newQuantity, size }),
+        });
+      }
+      onUpdate();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   const getSizes = (productName: string, lowerCat: string): (string | null)[] => {
     // Boissons taille unique (pas de label de taille)
     if (TAILLE_UNIQUE_BOISSONS.includes(productName)) return [null];
@@ -159,9 +195,26 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
                       </button>
 
-                      <span className={`text-sm font-bold w-6 ${quantity > 0 ? 'text-red-600' : 'text-slate-300'}`}>
-                        {quantity}
-                      </span>
+                      <input
+                        key={quantity}
+                        type="number"
+                        min="0"
+                        defaultValue={quantity}
+                        onBlur={(e) => handleEditSave(productName, size, currentLoss, parseInt(e.target.value) || 0)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleEditSave(productName, size, currentLoss, parseInt(e.currentTarget.value) || 0);
+                            e.currentTarget.blur();
+                          }
+                        }}
+                        className={`w-12 text-center border rounded text-sm p-0 focus:ring-2 focus:ring-red-200 focus:outline-none transition-colors
+                          ${quantity > 0 
+                            ? 'bg-white border-red-200 text-red-600 font-bold' 
+                            : 'bg-slate-50 border-slate-200 text-slate-400'
+                          }
+                        `}
+                        onClick={(e) => e.stopPropagation()}
+                      />
 
                       <button
                         onClick={() => handleQuantityChange(productName, size, currentLoss, 1)}
