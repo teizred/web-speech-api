@@ -65,13 +65,13 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
         const newQuantity = currentLoss.quantity + delta;
 
         if (newQuantity <= 0) {
-          await fetch(`http://localhost:3001/api/losses/${currentLoss.id}`, {
+          await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quantity: 0 }),
           });
         } else {
-          await fetch(`http://localhost:3001/api/losses/${currentLoss.id}`, {
+          await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quantity: newQuantity }),
@@ -79,7 +79,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
         }
       } else if (delta > 0) {
         // CREATE MANUAL
-        await fetch("http://localhost:3001/api/losses/manual", {
+        await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses/manual", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 

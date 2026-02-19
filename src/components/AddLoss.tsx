@@ -31,7 +31,7 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
     setSuccess(null);
 
     try {
-      const response = await fetch("http://localhost:3001/api/losses", {
+      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcript: text }),

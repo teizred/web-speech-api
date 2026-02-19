@@ -16,7 +16,7 @@ export default function App() {
 
   const fetchLosses = async () => {
     try {
-      const response = await fetch("http://localhost:3001/api/losses");
+      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses");
       const data = await response.json();
       setLosses(data);
     } catch (e) {

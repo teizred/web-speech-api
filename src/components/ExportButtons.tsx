@@ -12,7 +12,7 @@ export const ExportButtons = () => {
     setMessage(null);
     
     try {
-      const response = await fetch("http://localhost:3001/api/export/pdf");
+      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/export/pdf");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -41,7 +41,7 @@ export const ExportButtons = () => {
     setMessage(null);
 
     try {
-      const response = await fetch("http://localhost:3001/api/export/email", {
+      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/export/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
