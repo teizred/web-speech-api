@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
 import { ExportButtons } from "./components/ExportButtons";
+import { API_BASE_URL } from "./config/api";
 
 interface Loss {
   id: number;
@@ -11,19 +12,22 @@ interface Loss {
   created_at: string;
 }
 
+// C'est le composant principal de l'app
 export default function App() {
   const [losses, setLosses] = useState<Loss[]>([]);
 
+  // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
     try {
-      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses");
+      const response = await fetch(`${API_BASE_URL}/api/losses`);
       const data = await response.json();
-      setLosses(data);
+      setLosses(data); // On met à jour l'état avec les données reçues
     } catch (e) {
-      console.error("Failed to fetch losses", e);
+      console.error("Erreur lors du chargement des pertes", e);
     }
   };
 
+  // On charge les données dès que l'app s'affiche
   useEffect(() => {
     fetchLosses();
   }, []);

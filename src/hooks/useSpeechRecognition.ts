@@ -12,8 +12,8 @@ interface UseSpeechRecognitionReturn {
 }
 
 /**
- * Hook personnalisé pour gérer la reconnaissance vocale (Speech Recognition API)
- * Ce hook encapsule toute la logique complexe de l'API native du navigateur.
+ * Mon hook pour gérer la voix avec le navigateur
+ * C'est ici que toute la partie "micro" se passe.
  */
 export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     // --- États (State) ---
@@ -26,8 +26,7 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
     // Référence pour stocker l'instance de reconnaissance sans provoquer de re-rendus
     const recognitionRef = useRef<any>(null);
 
-    // Effets
-    // Au montage, on vérifie si le navigateur supporte l'API SpeechRecognition
+    // Vérification de la compatibilité du navigateur au démarrage
     useEffect(() => {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             setIsSupported(false);
@@ -35,21 +34,17 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
         }
     }, []);
 
-    // Fonctions 
-
-    // Démarrer l'écoute
+    // Lancer l'écoute
     const startListening = () => {
         if (!isSupported) return;
 
-        // @ts-ignore - Typescript ne connait pas toujours webkitSpeechRecognition
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
         recognitionRef.current = recognition;
 
-        // Configuration de la reconnaissance
-        recognition.lang = "fr-FR";        // Langue française
-        recognition.continuous = false;    // S'arrête après une phrase (change à true pour continu)
-        recognition.interimResults = true; // Affiche les résultats partiels en temps réel
+        recognition.lang = "fr-FR";        // On parle en français
+        recognition.continuous = false;    
+        recognition.interimResults = true; // Pour voir le texte s'afficher en temps réel
 
         // Événement : L'écoute commence
         recognition.onstart = () => {
@@ -62,21 +57,19 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
             }
         };
 
-        // Événement : Un résultat est détecté
+        // Quand il détecte ce qu'on dit
         recognition.onresult = (event: any) => {
             const speechResult = event.results[0][0].transcript;
             setText(speechResult);
         };
 
-        // Événement : Une erreur survient
+        // Gestion des erreurs (micro bloqué, etc.)
         recognition.onerror = (event: any) => {
-            console.error('Speech recognition error', event.error);
-            if (event.error === "no-speech") {
-                setError("Aucune parole détectée.");
-            } else if (event.error === "not-allowed") {
-                setError("Microphone bloqué.");
+            console.error('Erreur micro:', event.error);
+            if (event.error === "not-allowed") {
+                setError("Microphone bloqué dans tes réglages.");
             } else {
-                setError(`Erreur: ${event.error}`);
+                setError(`Petit souci : ${event.error}`);
             }
             setIsListening(false);
         };
@@ -90,7 +83,7 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
         recognition.start();
     };
 
-    // Arrêter l'écoute manuellement
+    // Arrêter l'écoute
     const stopListening = () => {
         if (recognitionRef.current) {
             recognitionRef.current.stop();

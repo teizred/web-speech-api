@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from "../config/api";
+import { CATEGORIES, getSizes } from "../data/menu";
 
 interface Loss {
   id: number;
@@ -13,48 +15,11 @@ interface LossTableProps {
   onUpdate: () => void;
 }
 
-const CATEGORIES = [
-  {
-    label: "🥩 Viandes",
-    products: ["10:1", "4:1", "3:1"],
-  },
-  {
-    label: "🍗 Protéines",
-    products: ["Poulet wrap", "Poulet CBO", "Poulet McChicken", "Poulet BM", "Filet", "Nuggets Veggie", "Nuggets", "Palet Veggie", "Apple Pie"],
-  },
-  {
-    label: "🥪 Sandwichs",
-    products: ["CBO Smoky Ranch", "McCrispy Smoky Ranch Bacon", "McWrap Smoky Ranch", "Big Mac Bacon", "Big Mac", "McVeggie", "McWrap Veggie", "Filet-O-Fish", "McFish Mayo", "McFish", "Fish New York", "Double Fish New York", "P'tit Chicken", "Croque McDo", "McChicken", "Cheeseburger", "Egg & Cheese McMuffin", "CBO", "Hamburger", "McWrap New York", "Royal Cheese", "P'tit Wrap Ranch","Egg & Cheese", "Egg & Bacon", "Double Cheeseburger", "Royal Deluxe", "Royal Bacon", "Big Tasty 1 steak", "Big Tasty 2 steaks", "280 Original", "Double Cheese Bacon", "Big Arch", "McCrispy Bacon", "McCrispy", "Bacon & Beef McMuffin"],
-  },
-  {
-    label: "🍟 Accompagnements",
-    products: ["Frites", "Potatoes", "Wavy Fries", "Frites Cheddar", "Frites Bacon", "Potatoes Cheddar", "Potatoes Bacon"],
-  },
-  {
-    label: "🥤 Boissons",
-    products: ["Coca-Cola", "Coca-Cola Sans-Sucres", "Coca-Cola Cherry Zéro", "Fanta Sans-Sucres", "Lipton Ice Tea", "Sprite Sans-Sucres", "Oasis Tropical", "Green Apple Sprite", "Eau Plate", "Eau Pétillante", "Minute Maid Orange", "P'tit Nectar Pomme", "Capri-Sun Tropical"],
-  },
-  {
-    label: "☕ McCafé",
-    products: ["Ristretto", "Espresso", "Double Espresso", "Café Allongé", "Café Latté", "Cappuccino", "Café Latte Glacé", "Café Latte Glacé Gourmand", "Americano Glacé", "Thé Earl Grey", "Thé Vert Menthe", "Thé Citron Gingembre", "Chocolat Chaud", "Chocolat Chaud Gourmand", "Espresso Décaféiné", "Café Allongé Décaféiné", "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille", "Smoothie Mangue Papaye", "Smoothie Banane Fraise"],
-  },
-];
-
-// Boissons sans taille
-const TAILLE_UNIQUE_BOISSONS = ["Capri-Sun Tropical", "P'tit Nectar Pomme"];
-// Boissons seulement Moyen/Grand
-const MOYEN_GRAND_BOISSONS = ["Eau Plate", "Eau Pétillante"];
-// McCafé sans taille
-const TAILLE_UNIQUE_MCCAFE = [
-  "Espresso", "Ristretto", "Double Espresso", "Espresso Décaféiné",
-  "Thé Glacé Pêche", "Délifrapp Cookie", "Délifrapp Vanille",
-  "Smoothie Mangue Papaye", "Smoothie Banane Fraise",
-];
-
+// Le tableau qui affiche toutes les pertes avec les boutons + et -
 export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  // Fusionner les pertes existantes
+  // On regroupe les pertes par produit et taille pour l'affichage
   const lossMap = new Map<string, Loss>();
   for (const loss of losses) {
     const key = `${loss.product}__${loss.size || "null"}`;
@@ -66,6 +31,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
     }
   }
 
+  // Changement de quantité avec les boutons + et -
   const handleQuantityChange = async (product: string, size: string | null, currentLoss: Loss | undefined, delta: number) => {
     const key = `${product}__${size || "null"}`;
     setLoadingId(key);
@@ -73,13 +39,13 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
     try {
       if (currentLoss) {
         const newQuantity = currentLoss.quantity + delta;
-        await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
+        await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ quantity: Math.max(0, newQuantity) }),
         });
       } else if (delta > 0) {
-        await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses/manual", {
+        await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ product, quantity: delta, size }),
@@ -93,6 +59,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
     }
   };
 
+  // Cette fonction s'exécute quand tu tapes directement une quantité au clavier
   const handleEditSave = async (product: string, size: string | null, currentLoss: Loss | undefined, newQuantity: number) => {
     if (newQuantity < 0) return;
 
@@ -101,21 +68,15 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
 
     try {
       if (currentLoss) {
-        if (newQuantity === 0) {
-           await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: 0 }),
-          });
-        } else {
-           await fetch(`https://web-speech-api-backend-production.up.railway.app/api/losses/${currentLoss.id}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ quantity: newQuantity }),
-          });
-        }
+        // On met à jour la ligne existante
+        await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ quantity: Math.max(0, newQuantity) }),
+        });
       } else if (newQuantity > 0) {
-        await fetch("https://web-speech-api-backend-production.up.railway.app/api/losses/manual", {
+        // Ou on en crée une nouvelle si c'était à 0
+        await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ product, quantity: newQuantity, size }),
@@ -123,29 +84,10 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
       }
       onUpdate();
     } catch (e) {
-      console.error(e);
+      console.error("Souci lors de la sauvegarde", e);
     } finally {
       setLoadingId(null);
     }
-  };
-
-  const getSizes = (productName: string, lowerCat: string): (string | null)[] => {
-    // Boissons taille unique (pas de label de taille)
-    if (TAILLE_UNIQUE_BOISSONS.includes(productName)) return [null];
-    // Frites : Petit / Moyen / Grand
-    if (productName === "Frites") return ["Petit", "Moyen", "Grand"];
-    // Potatoes & Wavy Fries : Moyen / Grand
-    if (productName === "Potatoes" || productName === "Wavy Fries") return ["Moyen", "Grand"];
-    // Eaux : Moyen / Grand
-    if (lowerCat.includes("boissons") && MOYEN_GRAND_BOISSONS.includes(productName)) return ["Moyen", "Grand"];
-    // Autres boissons : Petit / Moyen / Grand
-    if (lowerCat.includes("boissons")) return ["Petit", "Moyen", "Grand"];
-    // McCafé taille unique
-    if (lowerCat.includes("mccafé") && TAILLE_UNIQUE_MCCAFE.includes(productName)) return [null];
-    // McCafé : Moyen / Grand
-    if (lowerCat.includes("mccafé")) return ["Moyen", "Grand"];
-    // Tous les autres : pas de taille
-    return [null];
   };
 
   return (
@@ -160,8 +102,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {group.products.flatMap((productName) => {
-              const lowerCat = group.label.toLowerCase();
-              const sizes = getSizes(productName, lowerCat);
+              const sizes = getSizes(productName, group.label);
 
               return sizes.map((size) => {
                 const key = `${productName}__${size || "null"}`;

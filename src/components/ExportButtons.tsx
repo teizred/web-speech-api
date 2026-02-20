@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "../config/api";
 
 export const ExportButtons = () => {
   const [isLoadingPDF, setIsLoadingPDF] = useState(false);
@@ -7,12 +8,13 @@ export const ExportButtons = () => {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Fonction pour télécharger le PDF généré par le serveur
   const handleDownloadPDF = async () => {
     setIsLoadingPDF(true);
     setMessage(null);
     
     try {
-      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/export/pdf");
+      const response = await fetch(`${API_BASE_URL}/api/export/pdf`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -31,6 +33,7 @@ export const ExportButtons = () => {
     }
   };
 
+  // Fonction pour envoyer le rapport par email
   const handleSendEmail = async () => {
     if (!email) {
       setMessage({ type: "error", text: "Veuillez entrer un email" });
@@ -41,14 +44,13 @@ export const ExportButtons = () => {
     setMessage(null);
 
     try {
-      const response = await fetch("https://web-speech-api-backend-production.up.railway.app/api/export/email", {
+      const response = await fetch(`${API_BASE_URL}/api/export/email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.error);
 
       setMessage({ type: "success", text: "Email envoyé avec succès !" });
