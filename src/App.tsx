@@ -12,9 +12,21 @@ interface Loss {
   created_at: string;
 }
 
+// Structure d'un produit venant de l'API
+export interface ProductItem {
+  name: string;
+  sizes: string[] | null;
+}
+
+export interface ProductCategory {
+  label: string;
+  products: ProductItem[];
+}
+
 // C'est le composant principal de l'app
 export default function App() {
   const [losses, setLosses] = useState<Loss[]>([]);
+  const [categories, setCategories] = useState<ProductCategory[]>([]);
 
   // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
@@ -27,9 +39,21 @@ export default function App() {
     }
   };
 
+  // Fonction pour charger les produits depuis la base de données
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/products`);
+      const data = await response.json();
+      setCategories(data);
+    } catch (e) {
+      console.error("Erreur lors du chargement des produits", e);
+    }
+  };
+
   // On charge les données dès que l'app s'affiche
   useEffect(() => {
     fetchLosses();
+    fetchProducts();
   }, []);
 
   return (
@@ -49,7 +73,7 @@ export default function App() {
           <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider text-center">
             Historique du jour
           </h2>
-          <LossTable losses={losses} onUpdate={fetchLosses} />
+          <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
         </div>
 
         {/* Export Buttons */}

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { API_BASE_URL } from "../config/api";
-import { CATEGORIES, getSizes } from "../data/menu";
+import type { ProductCategory } from "../App";
 
 interface Loss {
   id: number;
@@ -12,11 +12,12 @@ interface Loss {
 
 interface LossTableProps {
   losses: Loss[];
+  categories: ProductCategory[];
   onUpdate: () => void;
 }
 
 // Le tableau qui affiche toutes les pertes avec les boutons + et -
-export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
+export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpdate }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   // On regroupe les pertes par produit et taille pour l'affichage
@@ -90,9 +91,17 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
     }
   };
 
+  // Détermine les tailles pour un produit à partir des données de la DB
+  const getSizes = (product: { name: string; sizes: string[] | null }): (string | null)[] => {
+    if (product.sizes && product.sizes.length > 0) {
+      return product.sizes;
+    }
+    return [null];
+  };
+
   return (
     <div className="space-y-8 pb-12">
-      {CATEGORIES.map((group) => (
+      {categories.map((group) => (
         <div key={group.label}>
           <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 mb-2 border-b border-slate-200/50">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">
@@ -101,11 +110,11 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {group.products.flatMap((productName) => {
-              const sizes = getSizes(productName, group.label);
+            {group.products.flatMap((product) => {
+              const sizes = getSizes(product);
 
               return sizes.map((size) => {
-                const key = `${productName}__${size || "null"}`;
+                const key = `${product.name}__${size || "null"}`;
                 const currentLoss = lossMap.get(key);
                 const quantity = currentLoss ? currentLoss.quantity : 0;
                 const isLoading = loadingId === key;
@@ -120,7 +129,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
                   >
                     <div className="flex-1 flex flex-col justify-center min-h-[40px]">
                       <span className={`text-xs font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
-                        {productName}
+                        {product.name}
                       </span>
                       {size && (
                         <span className="text-[10px] text-slate-400 font-medium">{size}</span>
@@ -129,7 +138,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
 
                     <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-1 w-full justify-between">
                       <button
-                        onClick={() => handleQuantityChange(productName, size, currentLoss, -1)}
+                        onClick={() => handleQuantityChange(product.name, size, currentLoss, -1)}
                         disabled={isLoading || quantity === 0}
                         className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 hover:shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                       >
@@ -141,10 +150,10 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
                         type="number"
                         min="0"
                         defaultValue={quantity}
-                        onBlur={(e) => handleEditSave(productName, size, currentLoss, parseInt(e.target.value) || 0)}
+                        onBlur={(e) => handleEditSave(product.name, size, currentLoss, parseInt(e.target.value) || 0)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            handleEditSave(productName, size, currentLoss, parseInt(e.currentTarget.value) || 0);
+                            handleEditSave(product.name, size, currentLoss, parseInt(e.currentTarget.value) || 0);
                             e.currentTarget.blur();
                           }
                         }}
@@ -158,7 +167,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, onUpdate }) => {
                       />
 
                       <button
-                        onClick={() => handleQuantityChange(productName, size, currentLoss, 1)}
+                        onClick={() => handleQuantityChange(product.name, size, currentLoss, 1)}
                         disabled={isLoading}
                         className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 hover:shadow-sm active:scale-95 transition-all disabled:opacity-50"
                       >

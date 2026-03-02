@@ -6,6 +6,12 @@ interface AddLossProps {
   onLossAdded: () => void;
 }
 
+interface ParsedItem {
+  product: string;
+  quantity: number;
+  size: string | null;
+}
+
 // Petit composant pour le bouton du micro qui s'anime
 const MicButton: React.FC<{ isListening: boolean; onClick: () => void }> = ({ isListening, onClick }) => {
     return (
@@ -35,6 +41,8 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // Nouvel état : les items parsés par l'IA en attente de validation
+  const [pendingItems, setPendingItems] = useState<ParsedItem[] | null>(null);
 
   // Notre hook magique qui s'occupe de la reconnaissance vocale
   const { isListening, text, startListening, stopListening } = useSpeechRecognition();
@@ -47,18 +55,19 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
       startListening();
       setSuccess(null);
       setError(null);
+      setPendingItems(null);
     }
   };
 
-  // On envoie le texte transcrit au serveur pour qu'il le comprenne
-  const handleSubmit = async () => {
+  // ÉTAPE 1 : On envoie le texte à l'IA pour parser (sans enregistrer)
+  const handleParse = async () => {
     if (!text) return;
     setIsLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/losses`, {
+      const response = await fetch(`${API_BASE_URL}/api/losses/parse`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ transcript: text }),
@@ -70,14 +79,60 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
       if (data.length === 0) {
         setError("L'IA n'a pas compris le produit ou la taille, réessaie.");
       } else {
-        setSuccess(`${data.length} perte(s) enregistrée(s) !`);
-        onLossAdded(); // On prévient le parent pour rafraîchir le tableau
+        setPendingItems(data); // On affiche la preview
       }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // ÉTAPE 2 : L'utilisateur confirme → on enregistre le batch
+  const handleConfirm = async () => {
+    if (!pendingItems || pendingItems.length === 0) return;
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/losses/batch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: pendingItems }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      setSuccess(`${data.length} perte(s) enregistrée(s) !`);
+      setPendingItems(null);
+      onLossAdded(); // On prévient le parent pour rafraîchir le tableau
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Modifier la quantité d'un item dans la preview
+  const handleItemQuantityChange = (index: number, newQuantity: number) => {
+    if (!pendingItems) return;
+    const updated = [...pendingItems];
+    updated[index] = { ...updated[index], quantity: Math.max(1, newQuantity) };
+    setPendingItems(updated);
+  };
+
+  // Retirer un item de la preview
+  const handleRemoveItem = (index: number) => {
+    if (!pendingItems) return;
+    const updated = pendingItems.filter((_, i) => i !== index);
+    setPendingItems(updated.length > 0 ? updated : null);
+  };
+
+  // Annuler la preview et recommencer
+  const handleCancel = () => {
+    setPendingItems(null);
+    setError(null);
   };
 
   return (
@@ -89,44 +144,146 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
         <p className="text-slate-400 text-sm mt-1">Appuyez sur le micro et parlez</p>
       </div>
 
-      {/* Mic Button Inline */}
-      <MicButton isListening={isListening} onClick={handleMicClick} />
+      {/* Mic Button — caché quand on a une preview en cours */}
+      {!pendingItems && (
+        <MicButton isListening={isListening} onClick={handleMicClick} />
+      )}
 
-      {/* Transcript Box */}
-      <div className="w-full">
-        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 text-left pl-1">
-            Transcription en direct
-        </label>
-        <div className={`
-            w-full rounded-2xl p-4 text-left min-h-[80px] transition-all duration-300
-            ${text 
-                ? 'bg-slate-50 border-2 border-slate-200 text-slate-800' 
-                : 'bg-slate-50/50 border-2 border-dashed border-slate-200 text-slate-400'
-            }
-        `}>
-            {text ? (
-                <p className="font-medium text-lg leading-relaxed">{text}</p>
-            ) : (
-                <p className="italic text-sm">Ce que tu dis apparaîtra ici...</p>
-            )}
+      {/* Transcript Box — caché quand on a une preview */}
+      {!pendingItems && (
+        <div className="w-full">
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 text-left pl-1">
+              Transcription en direct
+          </label>
+          <div className={`
+              w-full rounded-2xl p-4 text-left min-h-[80px] transition-all duration-300
+              ${text 
+                  ? 'bg-slate-50 border-2 border-slate-200 text-slate-800' 
+                  : 'bg-slate-50/50 border-2 border-dashed border-slate-200 text-slate-400'
+              }
+          `}>
+              {text ? (
+                  <p className="font-medium text-lg leading-relaxed">{text}</p>
+              ) : (
+                  <p className="italic text-sm">Ce que tu dis apparaîtra ici...</p>
+              )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Actions */}
-      <div className="w-full space-y-4">
-        {text && !isListening && (
+      {/* Bouton Analyser (remplace l'ancien "Valider et Enregistrer") */}
+      {text && !isListening && !pendingItems && (
+        <div className="w-full">
+          <button
+            onClick={handleParse}
+            disabled={isLoading}
+            className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Analyse en cours...
+              </span>
+            ) : (
+              " Analyser"
+            )}
+          </button>
+        </div>
+      )}
+
+      {/* ===== PREVIEW DES ITEMS PARSÉS ===== */}
+      {pendingItems && pendingItems.length > 0 && (
+        <div className="w-full space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 text-left pl-1">
+              L'IA a compris
+            </label>
+            <p className="text-xs text-slate-400 text-left pl-1">
+              Vérifie et corrige si besoin avant de confirmer
+            </p>
+          </div>
+
+          {/* Liste des items */}
+          <div className="space-y-3">
+            {pendingItems.map((item, index) => (
+              <div
+                key={`${item.product}-${item.size}-${index}`}
+                className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 flex items-center gap-4 transition-all hover:border-slate-300"
+              >
+                {/* Infos produit */}
+                <div className="flex-1 text-left">
+                  <p className="font-bold text-slate-800 text-sm leading-tight">{item.product}</p>
+                  {item.size && (
+                    <p className="text-xs text-slate-400 mt-0.5">{item.size}</p>
+                  )}
+                </div>
+
+                {/* Input quantité */}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleItemQuantityChange(index, item.quantity - 1)}
+                    disabled={item.quantity <= 1}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => handleItemQuantityChange(index, parseInt(e.target.value) || 1)}
+                    className="w-14 text-center border border-slate-200 rounded-lg text-sm font-bold py-1.5 focus:ring-2 focus:ring-blue-200 focus:outline-none bg-white text-slate-800"
+                  />
+                  <button
+                    onClick={() => handleItemQuantityChange(index, item.quantity + 1)}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-700 active:scale-95 transition-all"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </button>
+                </div>
+
+                {/* Bouton supprimer */}
+                <button
+                  onClick={() => handleRemoveItem(index)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-500 active:scale-95 transition-all"
+                  title="Retirer"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Boutons Confirmer / Annuler */}
+          <div className="flex gap-3 pt-2">
             <button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="w-full bg-slate-900 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-slate-800 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              onClick={handleCancel}
+              className="flex-1 py-3.5 rounded-xl font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200 active:scale-[0.98] transition-all"
             >
-                {isLoading ? "Envoi en cours..." : "Valider et Enregistrer"}
+              Annuler
             </button>
-        )}
+            <button
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className="flex-2 py-3.5 rounded-xl font-bold bg-green-600 text-white shadow-lg hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+            >
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Envoi...
+                </span>
+              ) : (
+                " Confirmer"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
-        {/* Petites alertes de succès ou d'erreur */}
+      {/* Petites alertes de succès ou d'erreur */}
+      <div className="w-full space-y-4">
         {success && (
-            <div className="p-3 bg-green-50 text-green-700 rounded-xl text-sm font-medium border border-green-100 animate-in fade-in slide-in-from-top-2">
+            <div className="p-3 bg-green-50 text-green-600 rounded-xl text-sm font-medium border border-green-100 animate-in fade-in slide-in-from-top-2">
                 ✅ {success}
             </div>
         )}
