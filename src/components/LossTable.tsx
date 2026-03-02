@@ -19,6 +19,7 @@ interface LossTableProps {
 // Le tableau qui affiche toutes les pertes avec les boutons + et -
 export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpdate }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // On regroupe les pertes par produit et taille pour l'affichage
   const lossMap = new Map<string, Loss>();
@@ -99,9 +100,54 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
     return [null];
   };
 
+  const filteredCategories = categories.map(group => ({
+    ...group,
+    products: group.products.filter(product => 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      group.label.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(group => group.products.length > 0);
+
   return (
-    <div className="space-y-8 pb-12">
-      {categories.map((group) => (
+    <div className="space-y-6 pb-12">
+      {/* Search Bar UI */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md pt-2 pb-4 px-1 -mx-1">
+        <div className="relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher un produit ou une catégorie..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-11 pr-10 py-3.5 bg-slate-100 border-2 border-transparent rounded-2xl text-sm font-medium transition-all focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 outline-none"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {filteredCategories.length === 0 && searchQuery && (
+        <div className="py-12 flex flex-col items-center justify-center text-slate-400 animate-in fade-in zoom-in-95 duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-20 mb-4"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <p className="text-sm font-medium">Aucun produit ne correspond à "{searchQuery}"</p>
+          <button 
+            onClick={() => setSearchQuery("")}
+            className="mt-3 text-xs font-bold text-blue-600 hover:underline"
+          >
+            Effacer la recherche
+          </button>
+        </div>
+      )}
+
+      {filteredCategories.map((group) => (
         <div key={group.label}>
           <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 mb-2 border-b border-slate-200/50">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">

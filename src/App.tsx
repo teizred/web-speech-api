@@ -70,9 +70,6 @@ export default function App() {
 
         {/* Data List */}
         <div className="space-y-4">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider text-center">
-            Historique du jour
-          </h2>
           <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
         </div>
 
