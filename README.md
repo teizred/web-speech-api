@@ -1,73 +1,53 @@
-# React + TypeScript + Vite
+# 🎙️ Perte McDo — Suivi vocal des pertes produits
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Une application web fullstack qui permet de suivre les pertes produits chez McDonald's par **commande vocale**, grâce à la Web Speech API et à l'intelligence artificielle.
 
-Currently, two official plugins are available:
+🔗 **[Démo live](https://web-speech-api-ai.vercel.app/)** · 💻 **[Code source](https://github.com/teizred/web-speech-api)**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## React Compiler
+## Le problème
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+En restauration rapide, le suivi des pertes produits (aliments jetés en fin de service) se fait souvent **sur papier** : c'est lent, source d'erreurs, et les données sont rarement exploitées. Il fallait une solution plus rapide et fiable.
 
-## Expanding the ESLint configuration
+## La solution
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Parler, valider, c'est enregistré.**
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+L'utilisateur appuie sur un bouton micro, dicte ses pertes à voix haute — par exemple _"3 Big Mac, 2 grandes frites, 1 CBO"_ — et l'application fait le reste :
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1.  **Reconnaissance vocale** — Le navigateur capte la voix via la Web Speech API
+2.  **Parsing par IA** — Le texte est envoyé à GPT-4o mini qui identifie les produits, quantités et tailles
+3.  **Validation** — L'utilisateur vérifie et ajuste avant de confirmer
+4.  **Enregistrement** — Les données sont stockées en base de données
+5.  **Export** — Génération de rapport PDF ou envoi par email
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+##  Stack technique
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Couche                    | Technologies                            |
+| ------------------------- | --------------------------------------- |
+| **Frontend**              | React, TypeScript, Tailwind CSS, Vite   |
+| **Backend**               | Node.js, Express                        |
+| **Base de données**       | Neon (PostgreSQL serverless)            |
+| **IA**                    | OpenAI API (GPT-4o mini), Vercel AI SDK |
+| **Export**                | PDFKit (PDF), Nodemailer (email)        |
+| **Reconnaissance vocale** | Web Speech API                          |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+##  Fonctionnalités
+
+- ✅ Reconnaissance vocale en français (Web Speech API)
+- ✅ Parsing intelligent par IA (reconnaissance des produits, tailles, quantités)
+- ✅ Ajout, modification et suppression des pertes
+- ✅ Tableau récapitulatif en temps réel
+- ✅ Export PDF du rapport de pertes
+- ✅ Envoi du rapport par email
+- ✅ Interface responsive
+
+---
+
+## Licence
+
+Ce projet est open source, à des fins d'apprentissage et de démonstration.
