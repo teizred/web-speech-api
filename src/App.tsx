@@ -127,7 +127,7 @@ export default function App() {
         <div className="flex flex-col md:flex-row md:gap-6 lg:gap-8 items-start">
           
           {/* Colonne gauche : micro + catégories (side) + export */}
-          <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
+          <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-1.5 md:gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
             <AddLoss onLossAdded={fetchLosses} />
             
             {/* Menu catégories Sidebar (Uniquement Desktop/Tablette) */}

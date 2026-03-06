@@ -18,39 +18,46 @@ interface LossTableProps {
 }
 // Le tableau qui affiche toutes les pertes avec les boutons + et -
 export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpdate }) => {
-  const [loadingId, setLoadingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // État local pour un retour visuel INSTANTANÉ (Optimistic UI)
+  const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
 
-  // On regroupe les pertes par produit et taille pour l'affichage
-  const lossMap = new Map<string, Loss>();
-  for (const loss of losses) {
-    const key = `${loss.product}__${loss.size || "null"}`;
-    if (lossMap.has(key)) {
-      const existing = lossMap.get(key)!;
-      existing.quantity += loss.quantity;
-    } else {
-      lossMap.set(key, { ...loss });
-    }
-  }
+  // Sync local quantities with props when they change
+  React.useEffect(() => {
+    const newLocal: Record<string, number> = {};
+    losses.forEach(loss => {
+      const key = `${loss.product}__${loss.size || "null"}`;
+      newLocal[key] = (newLocal[key] || 0) + loss.quantity;
+    });
+    setLocalQuantities(newLocal);
+  }, [losses]);
+
+  // Petit helper pour le debounce de la saisie manuelle
+  const [saveTimeout, setSaveTimeout] = useState<any>(null);
 
   // Changement de quantité avec les boutons + et -
   const handleQuantityChange = async (product: ProductItem, size: string | null, delta: number) => {
     const key = `${product.name}__${size || "null"}`;
-    const currentLoss = lossMap.get(key);
     
     // Pour le poids, le delta est de 100g par clic (plus rapide)
     const actualDelta = (product.unit_type === 'weight') ? delta * 100 : delta;
-    
-    setLoadingId(key);
+    const currentQty = localQuantities[key] || 0;
+    const newQuantity = Math.max(0, currentQty + actualDelta);
+
+    // 1. MISE À JOUR OPTIMISTE (instantanée)
+    setLocalQuantities(prev => ({ ...prev, [key]: newQuantity }));
 
     try {
-      if (currentLoss) {
-        const newQuantity = currentLoss.quantity + actualDelta;
-        await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
+      // On cherche si on a déjà une ligne en base pour ce produit/taille
+      const existingLoss = losses.find(l => l.product === product.name && (l.size === size || (!l.size && !size)));
+
+      if (existingLoss) {
+        await fetch(`${API_BASE_URL}/api/losses/${existingLoss.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
-            quantity: Math.max(0, newQuantity),
+            quantity: newQuantity,
             unit: product.unit_type === 'weight' ? 'g' : 'unit'
           }),
         });
@@ -66,50 +73,59 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
           }),
         });
       }
-      onUpdate();
+      onUpdate(); // Refresh global mais sans bloquer l'UI
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoadingId(null);
+      // Rollback en cas d'erreur
+      onUpdate();
     }
   };
 
-  // Sauvegarde des changements manuels au clavier
-  const handleEditSave = async (product: ProductItem, size: string | null, newValue: number) => {
+  // Sauvegarde des changements manuels au clavier (DEBOUNCED)
+  const handleEditSave = (product: ProductItem, size: string | null, newValue: number) => {
     const key = `${product.name}__${size || "null"}`;
-    const currentLoss = lossMap.get(key);
     
     if (newValue < 0) return;
-    setLoadingId(key);
 
-    try {
-      if (currentLoss) {
-        await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            quantity: newValue,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
-          }),
-        });
-      } else if (newValue > 0) {
-        await fetch(`${API_BASE_URL}/api/losses/manual`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            product: product.name, 
-            quantity: newValue, 
-            size,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
-          }),
-        });
+    // 1. Mise à jour immédiate à l'écran
+    setLocalQuantities(prev => ({ ...prev, [key]: newValue }));
+
+    // 2. On annule le timer précédent s'il existe
+    if (saveTimeout) clearTimeout(saveTimeout);
+
+    // 3. On lance le timer pour sauvegarder dans 500ms
+    const timeout = setTimeout(async () => {
+      try {
+        const existingLoss = losses.find(l => l.product === product.name && (l.size === size || (!l.size && !size)));
+        if (existingLoss) {
+          await fetch(`${API_BASE_URL}/api/losses/${existingLoss.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              quantity: newValue,
+              unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            }),
+          });
+        } else if (newValue > 0) {
+          await fetch(`${API_BASE_URL}/api/losses/manual`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              product: product.name, 
+              quantity: newValue, 
+              size,
+              unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            }),
+          });
+        }
+        onUpdate();
+      } catch (e) {
+        console.error(e);
+        onUpdate();
       }
-      onUpdate();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingId(null);
-    }
+    }, 500);
+
+    setSaveTimeout(timeout);
   };
 
   const getSizes = (product: ProductItem): (string | null)[] => {
@@ -140,9 +156,8 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
     const sizes = getSizes(product);
     return sizes.map((size) => {
       const key = `${product.name}__${size || "null"}`;
-      const currentLoss = lossMap.get(key);
-      const quantity = currentLoss ? currentLoss.quantity : 0;
-      const isLoading = loadingId === key;
+      const quantity = localQuantities[key] || 0;
+      const isLoading = false;
 
       return (
         <div

@@ -9,8 +9,11 @@ interface BottomNavProps {
 
 export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory, onCategoryClick }) => {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 px-2 pt-2 pb-[env(safe-area-inset-bottom,16px)] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pt-2 pb-[env(safe-area-inset-bottom,16px)] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      {/* Indicateur de scroll à droite (dégradé) */}
+      <div className="absolute top-0 right-0 bottom-[env(safe-area-inset-bottom,16px)] w-12 bg-linear-to-l from-white to-transparent pointer-events-none z-10" />
+      
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth px-2 relative">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.label;
           const [emoji, ...textParts] = cat.label.split(' ');
@@ -33,12 +36,11 @@ export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory
               `}>
                 {label}
               </span>
-              {isActive && (
-                <div className="w-1.5 h-1.5 bg-[#E11D48] rounded-full mt-1 animate-pulse" />
-              )}
             </button>
           );
         })}
+        {/* Petit spacer pour pouvoir scroller jusqu'au bout malgré le dégradé */}
+        <div className="flex-none w-10 h-10" />
       </div>
     </nav>
   );

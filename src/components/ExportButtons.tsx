@@ -64,8 +64,8 @@ export const ExportButtons = () => {
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
-      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider text-center">
+    <div className="bg-white rounded-3xl p-4 md:p-6 shadow-sm border border-slate-100 space-y-3 md:space-y-4">
+      <h3 className="text-xs md:text-sm font-semibold text-slate-500 uppercase tracking-wider text-center">
         📤 Exporter les pertes
       </h3>
 

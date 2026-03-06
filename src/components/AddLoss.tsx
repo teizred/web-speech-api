@@ -23,14 +23,14 @@ const MicButton: React.FC<{ isListening: boolean; onClick: () => void }> = ({ is
             
             <button
                 onClick={onClick}
-                className={`relative z-10 w-24 h-24 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform 
+                className={`relative z-10 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 transform 
                     ${isListening
                         ? 'bg-linear-to-br from-red-500 to-pink-600 text-white scale-110'
                         : 'bg-white text-blue-600 border-2 border-slate-100 hover:border-blue-200 hover:scale-105 active:scale-95'
                     }
                 `}
             >
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isListening ? "animate-pulse" : ""}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`md:w-10 md:h-10 ${isListening ? "animate-pulse" : ""}`}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></svg>
             </button>
         </div>
     );
@@ -136,12 +136,12 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-8 flex flex-col items-center text-center space-y-8">
+    <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 md:p-8 flex flex-col items-center text-center space-y-4 md:space-y-8">
       
       {/* Card Header */}
       <div>
-        <h2 className="text-2xl font-bold text-slate-800">Dicter vos pertes</h2>
-        <p className="text-slate-400 text-sm mt-1">Appuyez sur le micro et parlez</p>
+        <h2 className="text-xl md:text-2xl font-bold text-slate-800">Dicter vos pertes</h2>
+        <p className="text-slate-400 text-xs md:text-sm mt-1">Appuyez sur le micro et parlez</p>
       </div>
 
       {/* Mic Button — caché quand on a une preview en cours */}
