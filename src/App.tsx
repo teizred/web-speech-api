@@ -17,10 +17,17 @@ interface Loss {
 export interface ProductItem {
   name: string;
   sizes: string[] | null;
+  subcategory: string | null;
+}
+
+export interface ProductSubcategory {
+  name: string;
+  products: ProductItem[];
 }
 
 export interface ProductCategory {
   label: string;
+  subcategories: ProductSubcategory[];
   products: ProductItem[];
 }
 
