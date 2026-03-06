@@ -1,0 +1,45 @@
+import React from 'react';
+import type { ProductCategory } from '../App';
+
+interface BottomNavProps {
+  categories: ProductCategory[];
+  activeCategory: string;
+  onCategoryClick: (label: string) => void;
+}
+
+export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory, onCategoryClick }) => {
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 px-2 pt-2 pb-[env(safe-area-inset-bottom,16px)] shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+        {categories.map((cat) => {
+          const isActive = activeCategory === cat.label;
+          const [emoji, ...textParts] = cat.label.split(' ');
+          const label = textParts.join(' ');
+
+          return (
+            <button
+              key={cat.label}
+              onClick={() => onCategoryClick(cat.label)}
+              className={`
+                flex flex-col items-center justify-center min-w-[85px] py-1.5 px-1 rounded-xl transition-all active:scale-90 shrink-0
+                ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
+              `}
+            >
+              <span className={`text-xl mb-0.5 transition-transform ${isActive ? 'scale-110' : 'grayscale-[0.5] opacity-70'}`}>
+                {emoji}
+              </span>
+              <span className={`text-[9px] font-extrabold text-center uppercase tracking-tight leading-tight max-w-full
+                ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
+              `}>
+                {label}
+              </span>
+              {isActive && (
+                <div className="w-1.5 h-1.5 bg-[#E11D48] rounded-full mt-1 animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};

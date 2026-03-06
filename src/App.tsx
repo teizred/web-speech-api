@@ -3,6 +3,7 @@ import { Header } from "./components/Header";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
 import { ExportButtons } from "./components/ExportButtons";
+import { BottomNav } from "./components/BottomNav";
 import { API_BASE_URL } from "./config/api";
 
 interface Loss {
@@ -37,6 +38,7 @@ export interface ProductCategory {
 export default function App() {
   const [losses, setLosses] = useState<Loss[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>("");
 
   // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
@@ -55,6 +57,7 @@ export default function App() {
       const response = await fetch(`${API_BASE_URL}/api/products`);
       const data = await response.json();
       setCategories(data);
+      if (data.length > 0) setActiveCategory(data[0].label);
     } catch (e) {
       console.error("Erreur lors du chargement des produits", e);
     }
@@ -66,14 +69,41 @@ export default function App() {
     fetchProducts();
   }, []);
 
+  // Detection de la section active pour la bottom nav
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // L'ID est généré de la même façon que dans LossTable
+            const label = categories.find(c => c.label.toLowerCase().replace(/\s+/g, '-') === entry.target.id)?.label;
+            if (label) setActiveCategory(label);
+          }
+        });
+      },
+      { threshold: 0.3, rootMargin: "-80px 0px -50% 0px" }
+    );
+
+    categories.forEach((cat) => {
+      const id = cat.label.toLowerCase().replace(/\s+/g, '-');
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [categories]);
+
   // Fonction pour scroller vers une catégorie
   const scrollToCategory = (label: string) => {
     const id = label.toLowerCase().replace(/\s+/g, '-');
     const element = document.getElementById(id);
     if (element) {
+      setActiveCategory(label);
+      
       // Décalage adaptatif pour mobile/desktop
       const isMobile = window.innerWidth < 768;
-      const offset = isMobile ? 160 : 20; 
+      // Sur mobile on a plus besoin de 160 car les chips ont dégagé (on n'a plus que le header)
+      const offset = isMobile ? 80 : 20; 
       
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
@@ -88,7 +118,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24 md:pb-0">
       {/* Header McDonald's */}
       <Header />
 
@@ -105,35 +135,27 @@ export default function App() {
               <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider text-center mb-2">
                 📂 Catégories
               </h3>
-              {categories.map((cat) => (
-                <button
-                  key={cat.label}
-                  onClick={() => scrollToCategory(cat.label)}
-                  className="w-full justify-start px-4 py-3 hover:bg-slate-100 rounded-2xl text-sm font-bold text-slate-700 transition-all flex items-center gap-3 active:scale-[0.98]"
-                >
-                  <span className="text-lg">{cat.label.split(' ')[0]}</span>
-                  <span className="flex-1 text-left">{cat.label.split(' ').slice(1).join(' ')}</span>
-                  <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-400">
-                    {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
-                  </span>
-                </button>
-              ))}
+              {categories.map((cat) => {
+                const isActive = activeCategory === cat.label;
+                return (
+                  <button
+                    key={cat.label}
+                    onClick={() => scrollToCategory(cat.label)}
+                    className={`w-full justify-start px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-3 active:scale-[0.98]
+                      ${isActive ? 'bg-[#E11D48] text-white shadow-md' : 'hover:bg-slate-100 text-slate-700'}
+                    `}
+                  >
+                    <span className="text-lg">{cat.label.split(' ')[0]}</span>
+                    <span className="flex-1 text-left">{cat.label.split(' ').slice(1).join(' ')}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                      {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
+                    </span>
+                  </button>
+                );
+              })}
             </nav>
 
             <ExportButtons />
-
-            {/* Chips catégories horizontales (Uniquement Mobile iPhone) — Placé APRÈS l'export */}
-            <div className="md:hidden sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md py-4 -mx-1 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200">
-              {categories.map((cat) => (
-                <button
-                  key={cat.label}
-                  onClick={() => scrollToCategory(cat.label)}
-                  className="flex-none px-4 py-2 bg-white border border-slate-200 shadow-sm hover:border-[#264F36] active:scale-95 text-xs font-bold rounded-full transition-all whitespace-nowrap text-slate-700"
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
           </aside>
 
           {/* Colonne droite : recherche + grille de produits */}
@@ -142,6 +164,13 @@ export default function App() {
           </main>
         </div>
       </div>
+
+      {/* Barre de navigation basse (Mobile uniquement) */}
+      <BottomNav 
+        categories={categories} 
+        activeCategory={activeCategory} 
+        onCategoryClick={scrollToCategory} 
+      />
     </div>
   );
 }
