@@ -10,6 +10,7 @@ interface Loss {
   product: string;
   quantity: number;
   size: string | null;
+  unit: string;
   created_at: string;
 }
 
@@ -18,6 +19,7 @@ export interface ProductItem {
   name: string;
   sizes: string[] | null;
   subcategory: string | null;
+  unit_type: 'unit' | 'weight' | 'pieces';
 }
 
 export interface ProductSubcategory {
@@ -64,23 +66,78 @@ export default function App() {
     fetchProducts();
   }, []);
 
+  // Fonction pour scroller vers une catégorie
+  const scrollToCategory = (label: string) => {
+    const id = label.toLowerCase().replace(/\s+/g, '-');
+    const element = document.getElementById(id);
+    if (element) {
+      // Décalage adaptatif pour mobile/desktop
+      const isMobile = window.innerWidth < 768;
+      const offset = isMobile ? 160 : 20; 
+      
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Header McDonald's */}
       <Header />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
-      <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8">
-        <div className="md:flex md:gap-6 lg:gap-8 md:items-start">
+      <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
+        <div className="flex flex-col md:flex-row md:gap-6 lg:gap-8 items-start">
           
-          {/* Colonne gauche : micro + catégories + export */}
-          <aside className="md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-4 mb-6 md:mb-0">
+          {/* Colonne gauche : micro + catégories (side) + export */}
+          <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
             <AddLoss onLossAdded={fetchLosses} />
+            
+            {/* Menu catégories Sidebar (Uniquement Desktop/Tablette) */}
+            <nav className="hidden md:flex flex-col gap-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+              <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider text-center mb-2">
+                📂 Catégories
+              </h3>
+              {categories.map((cat) => (
+                <button
+                  key={cat.label}
+                  onClick={() => scrollToCategory(cat.label)}
+                  className="w-full justify-start px-4 py-3 hover:bg-slate-100 rounded-2xl text-sm font-bold text-slate-700 transition-all flex items-center gap-3 active:scale-[0.98]"
+                >
+                  <span className="text-lg">{cat.label.split(' ')[0]}</span>
+                  <span className="flex-1 text-left">{cat.label.split(' ').slice(1).join(' ')}</span>
+                  <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-400">
+                    {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
+                  </span>
+                </button>
+              ))}
+            </nav>
+
             <ExportButtons />
+
+            {/* Chips catégories horizontales (Uniquement Mobile iPhone) — Placé APRÈS l'export */}
+            <div className="md:hidden sticky top-0 z-40 bg-slate-50/95 backdrop-blur-md py-4 -mx-1 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200">
+              {categories.map((cat) => (
+                <button
+                  key={cat.label}
+                  onClick={() => scrollToCategory(cat.label)}
+                  className="flex-none px-4 py-2 bg-white border border-slate-200 shadow-sm hover:border-[#264F36] active:scale-95 text-xs font-bold rounded-full transition-all whitespace-nowrap text-slate-700"
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </aside>
 
           {/* Colonne droite : recherche + grille de produits */}
-          <main className="md:flex-1 md:min-w-0">
+          <main className="w-full md:flex-1 md:min-w-0">
             <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
           </main>
         </div>

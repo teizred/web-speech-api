@@ -7,6 +7,7 @@ interface Loss {
   product: string;
   quantity: number;
   size: string | null;
+  unit: string;
   created_at: string;
 }
 
@@ -15,7 +16,6 @@ interface LossTableProps {
   categories: ProductCategory[];
   onUpdate: () => void;
 }
-
 // Le tableau qui affiche toutes les pertes avec les boutons + et -
 export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpdate }) => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -34,23 +34,36 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
   }
 
   // Changement de quantité avec les boutons + et -
-  const handleQuantityChange = async (product: string, size: string | null, currentLoss: Loss | undefined, delta: number) => {
-    const key = `${product}__${size || "null"}`;
+  const handleQuantityChange = async (product: ProductItem, size: string | null, delta: number) => {
+    const key = `${product.name}__${size || "null"}`;
+    const currentLoss = lossMap.get(key);
+    
+    // Pour le poids, le delta est de 100g par clic (plus rapide)
+    const actualDelta = (product.unit_type === 'weight') ? delta * 100 : delta;
+    
     setLoadingId(key);
 
     try {
       if (currentLoss) {
-        const newQuantity = currentLoss.quantity + delta;
+        const newQuantity = currentLoss.quantity + actualDelta;
         await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: Math.max(0, newQuantity) }),
+          body: JSON.stringify({ 
+            quantity: Math.max(0, newQuantity),
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
         });
       } else if (delta > 0) {
         await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ product, quantity: delta, size }),
+          body: JSON.stringify({ 
+            product: product.name, 
+            quantity: actualDelta, 
+            size,
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
         });
       }
       onUpdate();
@@ -61,66 +74,67 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
     }
   };
 
-  // Cette fonction s'exécute quand tu tapes directement une quantité au clavier
-  const handleEditSave = async (product: string, size: string | null, currentLoss: Loss | undefined, newQuantity: number) => {
-    if (newQuantity < 0) return;
-
-    const key = `${product}__${size || "null"}`;
+  // Sauvegarde des changements manuels au clavier
+  const handleEditSave = async (product: ProductItem, size: string | null, newValue: number) => {
+    const key = `${product.name}__${size || "null"}`;
+    const currentLoss = lossMap.get(key);
+    
+    if (newValue < 0) return;
     setLoadingId(key);
 
     try {
       if (currentLoss) {
-        // On met à jour la ligne existante
         await fetch(`${API_BASE_URL}/api/losses/${currentLoss.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ quantity: Math.max(0, newQuantity) }),
+          body: JSON.stringify({ 
+            quantity: newValue,
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
         });
-      } else if (newQuantity > 0) {
-        // Ou on en crée une nouvelle si c'était à 0
+      } else if (newValue > 0) {
         await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ product, quantity: newQuantity, size }),
+          body: JSON.stringify({ 
+            product: product.name, 
+            quantity: newValue, 
+            size,
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
         });
       }
       onUpdate();
     } catch (e) {
-      console.error("Souci lors de la sauvegarde", e);
+      console.error(e);
     } finally {
       setLoadingId(null);
     }
   };
 
-  // Détermine les tailles pour un produit à partir des données de la DB
   const getSizes = (product: ProductItem): (string | null)[] => {
-    if (product.sizes && product.sizes.length > 0) {
-      return product.sizes;
-    }
+    if (product.sizes && product.sizes.length > 0) return product.sizes;
     return [null];
   };
 
-  // Filtrage des produits par recherche
   const filterProducts = (products: ProductItem[]) => {
     return products.filter(product => 
       product.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
 
-  const filteredCategories = categories.map(group => {
-    const filteredSubcategories = group.subcategories.map(sub => ({
+  const filteredCategories = categories.map((group: ProductCategory) => {
+    const filteredSubcategories = group.subcategories.map((sub: any) => ({
       ...sub,
       products: filterProducts(sub.products)
-    })).filter(sub => sub.products.length > 0);
-
+    })).filter((sub: any) => sub.products.length > 0);
     const filteredDirectProducts = filterProducts(group.products);
-
     return {
       ...group,
       subcategories: filteredSubcategories,
       products: filteredDirectProducts
     };
-  }).filter(group => group.subcategories.length > 0 || group.products.length > 0);
+  }).filter((group: any) => group.subcategories.length > 0 || (group.directProducts && group.directProducts.length > 0) || (group.products && group.products.length > 0));
 
   const renderProduct = (product: ProductItem) => {
     const sizes = getSizes(product);
@@ -134,61 +148,71 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
         <div
           key={key}
           className={`
-            relative bg-white rounded-xl border shadow-sm p-3 flex flex-col items-center gap-3 text-center transition-all
+            relative bg-white rounded-xl border shadow-sm p-3 flex flex-col items-center gap-2 text-center transition-all
             ${quantity > 0 ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-100'}
           `}
         >
-          <div className="flex-1 flex flex-col justify-center min-h-[40px]">
-            <span className={`text-xs font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
+          {/* Header Produit */}
+          <div className="flex flex-col justify-center min-h-[44px] w-full">
+            <span className={`text-[11px] font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
               {product.name}
             </span>
             {size && (
               <span className="text-[10px] text-slate-400 font-medium">{size}</span>
             )}
+            
+            {/* Affichage intelligent du poids (ex: 1200g -> 1.20 kg) */}
+            {product.unit_type === 'weight' && quantity >= 1000 && (
+              <span className="text-[10px] text-blue-600 font-bold mt-1">
+                ({(quantity / 1000).toFixed(2)} kg)
+              </span>
+            )}
+            
+            {/* Label g pour les autres poids */}
+            {product.unit_type === 'weight' && quantity < 1000 && quantity > 0 && (
+              <span className="text-[10px] text-slate-400 font-medium">g</span>
+            )}
+
+            {product.unit_type === 'pieces' && (
+              <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
+            )}
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-1 w-full justify-between">
+          {/* Contrôles Quantité */}
+          <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1 w-full justify-between mt-auto">
             <button
-              onClick={() => handleQuantityChange(product.name, size, currentLoss, -1)}
+              onClick={() => handleQuantityChange(product, size, -1)}
               disabled={isLoading || quantity === 0}
-              className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 hover:shadow-sm active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 active:scale-90 transition-all disabled:opacity-30"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
 
             <input
-              key={quantity}
               type="number"
-              min="0"
-              defaultValue={quantity}
-              onBlur={(e) => handleEditSave(product.name, size, currentLoss, parseInt(e.target.value) || 0)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleEditSave(product.name, size, currentLoss, parseInt(e.currentTarget.value) || 0);
-                  e.currentTarget.blur();
-                }
+              value={quantity === 0 ? "" : quantity}
+              placeholder="0"
+              onChange={(e) => {
+                const val = parseInt(e.target.value);
+                handleEditSave(product, size, isNaN(val) ? 0 : val);
               }}
-              className={`w-12 text-center border rounded text-sm p-0 focus:ring-2 focus:ring-red-200 focus:outline-none transition-colors
-                ${quantity > 0 
-                  ? 'bg-white border-red-200 text-red-600 font-bold' 
-                  : 'bg-slate-50 border-slate-200 text-slate-400'
-                }
+              className={`w-14 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none
+                ${quantity > 0 ? 'text-red-600 font-bold' : 'text-slate-400'}
               `}
-              onClick={(e) => e.stopPropagation()}
             />
 
             <button
-              onClick={() => handleQuantityChange(product.name, size, currentLoss, 1)}
+              onClick={() => handleQuantityChange(product, size, 1)}
               disabled={isLoading}
-              className="w-8 h-8 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 hover:shadow-sm active:scale-95 transition-all disabled:opacity-50"
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 active:scale-90 transition-all"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </button>
           </div>
 
           {isLoading && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-20">
-              <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           )}
         </div>
@@ -198,9 +222,8 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Search Bar UI */}
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md pt-2 pb-4 px-1 -mx-1">
-        <div className="relative group">
+        <label className="relative block group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </div>
@@ -209,60 +232,46 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
             placeholder="Rechercher un produit..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-10 py-3.5 bg-slate-100 border-2 border-transparent rounded-2xl text-sm font-medium transition-all focus:bg-white focus:border-blue-500/20 focus:ring-4 focus:ring-blue-500/5 outline-none"
+            className="w-full pl-11 pr-10 py-3 bg-slate-100 border-2 border-transparent rounded-2xl text-sm font-medium transition-all focus:bg-white focus:border-blue-500/20 outline-none"
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-            </button>
-          )}
-        </div>
+        </label>
       </div>
 
-      {filteredCategories.length === 0 && searchQuery && (
-        <div className="py-12 flex flex-col items-center justify-center text-slate-400 animate-in fade-in zoom-in-95 duration-300">
-          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="opacity-20 mb-4"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          <p className="text-sm font-medium">Aucun produit ne correspond à "{searchQuery}"</p>
-          <button 
-            onClick={() => setSearchQuery("")}
-            className="mt-3 text-xs font-bold text-blue-600 hover:underline"
-          >
-            Effacer la recherche
-          </button>
+      {filteredCategories.length === 0 && (
+        <div className="py-20 text-center text-slate-400">
+          <p>Aucun produit trouvé</p>
         </div>
       )}
 
-      {filteredCategories.map((group) => (
-        <div key={group.label} className="space-y-6">
-          <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 mb-2 border-b border-slate-200/50">
-            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest px-1">
-              {group.label}
-            </h3>
-          </div>
-
-          {/* Produits directs (sans sous-catégorie) */}
-          {group.products.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {group.products.flatMap(renderProduct)}
+      {filteredCategories.map((group) => {
+        const categoryId = group.label.toLowerCase().replace(/\s+/g, '-');
+        return (
+          <div key={group.label} id={categoryId} className="space-y-6 scroll-mt-24">
+            <div className="sticky top-0 bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-200/50">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+                {group.label}
+              </h3>
             </div>
-          )}
 
-          {/* Sous-catégories */}
-          {group.subcategories.map((sub) => (
-            <div key={sub.name} className="space-y-3">
-              <h4 className="text-xs font-bold text-slate-400 px-1 italic">
-                — {sub.name}
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {sub.products.flatMap(renderProduct)}
+            {group.products.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {group.products.flatMap(renderProduct)}
               </div>
-            </div>
-          ))}
-        </div>
-      ))}
+            )}
+
+            {group.subcategories.map((sub) => (
+              <div key={sub.name} className="space-y-3">
+                <h4 className="text-[10px] font-bold text-slate-300 px-1 italic">
+                  — {sub.name}
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {sub.products.flatMap(renderProduct)}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 };
