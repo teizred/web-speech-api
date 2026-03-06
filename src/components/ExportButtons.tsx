@@ -73,7 +73,7 @@ export const ExportButtons = () => {
       <button
         onClick={handleDownloadPDF}
         disabled={isLoadingPDF}
-        className="w-full bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+        className="w-full bg-[#264F36] hover:bg-[#1e3f2b] disabled:bg-[#264F36]/50 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
       >
         {isLoadingPDF ? (
           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

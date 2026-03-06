@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Header } from "./components/Header";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
 import { ExportButtons } from "./components/ExportButtons";
@@ -57,26 +58,26 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen p-6 md:p-12 max-w-lg mx-auto flex flex-col gap-8">
+    <div className="min-h-screen bg-slate-50">
+      {/* Header McDonald's */}
+      <Header />
 
-      {/* Title */}
-      <h1 className="text-3xl md:text-4xl font-bold text-center text-slate-900 tracking-tight">
-        Perte McDonald's
-      </h1>
+      {/* Contenu principal — layout adaptatif selon le wireframe */}
+      <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8">
+        <div className="md:flex md:gap-6 lg:gap-8 md:items-start">
+          
+          {/* Colonne gauche : micro + catégories + export */}
+          <aside className="md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-4 mb-6 md:mb-0">
+            <AddLoss onLossAdded={fetchLosses} />
+            <ExportButtons />
+          </aside>
 
-      {/* Main Action Card */}
-      <main className="flex flex-col gap-8">
-        <AddLoss onLossAdded={fetchLosses} />
-
-        {/* Data List */}
-        <div className="space-y-4">
-          <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
+          {/* Colonne droite : recherche + grille de produits */}
+          <main className="md:flex-1 md:min-w-0">
+            <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
+          </main>
         </div>
-
-        {/* Export Buttons */}
-        <ExportButtons />
-      </main>
-
+      </div>
     </div>
   );
 }
