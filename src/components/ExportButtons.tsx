@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { API_BASE_URL } from "../config/api";
 
-export const ExportButtons = () => {
+export const ExportButtons = ({ onReset }: { onReset: () => void }) => {
   const [isLoadingPDF, setIsLoadingPDF] = useState(false);
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [email, setEmail] = useState("");
@@ -60,6 +60,30 @@ export const ExportButtons = () => {
       setMessage({ type: "error", text: error.message || "Erreur lors de l'envoi" });
     } finally {
       setIsLoadingEmail(false);
+    }
+  };
+
+  // Fonction pour tout remettre à zéro avec confirmation
+  const handleReset = async () => {
+    const today = new Date().toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+    
+    if (window.confirm(`⚠️ ATTENTION : Vous allez supprimer DÉFINITIVEMENT toutes les pertes enregistrées le ${today}. Cette opération est irréversible. Êtes-vous certain de vouloir continuer ?`)) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/losses`, {
+          method: "DELETE"
+        });
+        
+        if (!response.ok) throw new Error("Erreur lors de la réinitialisation");
+        
+        setMessage({ type: "success", text: "Pertes du jour supprimées !" });
+        onReset(); // Rafraîchir la liste
+      } catch (error: any) {
+        setMessage({ type: "error", text: error.message });
+      }
     }
   };
 
@@ -123,6 +147,17 @@ export const ExportButtons = () => {
           </div>
         </div>
       )}
+
+      {/* Bouton Reset */}
+      <div className="pt-2 border-t border-slate-100">
+        <button
+          onClick={handleReset}
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 font-bold rounded-xl transition-all border border-transparent hover:border-red-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+          Tout réinitialiser
+        </button>
+      </div>
 
       {/* Messages */}
       {message && (

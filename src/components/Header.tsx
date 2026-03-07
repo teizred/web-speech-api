@@ -1,8 +1,15 @@
-import React from "react";
+import { useState } from "react";
+import { MobileMenu } from "./MobileMenu";
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onReset?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onReset }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <header className="bg-[#264F36] text-white shadow-md">
+    <header className="bg-[#264F36] text-white shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
         {/* McDonald's Logo */}
         <img
@@ -21,8 +28,8 @@ export const Header: React.FC = () => {
           </p>
         </div>
 
-        {/* Date */}
-        <div className="text-right hidden sm:block">
+        {/* Date & Time (Hidden on mini screens) */}
+        <div className="text-right hidden sm:block mr-2">
           <p className="text-sm font-semibold">
             {new Date().toLocaleDateString("fr-FR", {
               weekday: "short",
@@ -37,7 +44,23 @@ export const Header: React.FC = () => {
             })}
           </p>
         </div>
+
+        {/* Burger Menu Button (Mobile only) */}
+        <button 
+          onClick={() => setIsMenuOpen(true)}
+          className="md:hidden p-2 hover:bg-white/10 rounded-full transition-colors"
+          aria-label="Menu"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
       </div>
+
+      {/* Mobile Menu Overlay */}
+      <MobileMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+        onReset={onReset || (() => {})} 
+      />
     </header>
   );
 };

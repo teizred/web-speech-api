@@ -5,6 +5,7 @@ import { LossTable } from "./components/LossTable";
 import { ExportButtons } from "./components/ExportButtons";
 import { BottomNav } from "./components/BottomNav";
 import { API_BASE_URL } from "./config/api";
+import { LossTypeTabs } from "./components/LossTypeTabs";
 
 interface Loss {
   id: number;
@@ -20,7 +21,7 @@ export interface ProductItem {
   name: string;
   sizes: string[] | null;
   subcategory: string | null;
-  unit_type: 'unit' | 'weight' | 'pieces';
+  unit_type: 'unit' | 'weight' | 'pieces' | 'liquid';
 }
 
 export interface ProductSubcategory {
@@ -39,6 +40,7 @@ export default function App() {
   const [losses, setLosses] = useState<Loss[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("");
+  const [lossType, setLossType] = useState<'complet' | 'vide'>('complet');
 
   // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
@@ -54,7 +56,7 @@ export default function App() {
   // Fonction pour charger les produits depuis la base de données
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/products`);
+      const response = await fetch(`${API_BASE_URL}/api/products?type=${lossType}`);
       const data = await response.json();
       setCategories(data);
       if (data.length > 0) setActiveCategory(data[0].label);
@@ -63,11 +65,15 @@ export default function App() {
     }
   };
 
-  // On charge les données dès que l'app s'affiche
+  // On charge les données
   useEffect(() => {
     fetchLosses();
-    fetchProducts();
   }, []);
+
+  // On recharge les produits quand le type change
+  useEffect(() => {
+    fetchProducts();
+  }, [lossType]);
 
   // Detection de la section active pour la bottom nav
   useEffect(() => {
@@ -102,7 +108,6 @@ export default function App() {
       
       // Décalage adaptatif pour mobile/desktop
       const isMobile = window.innerWidth < 768;
-      // Sur mobile on a plus besoin de 160 car les chips ont dégagé (on n'a plus que le header)
       const offset = isMobile ? 80 : 20; 
       
       const bodyRect = document.body.getBoundingClientRect().top;
@@ -119,8 +124,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24 md:pb-0">
-      {/* Header McDonald's */}
-      <Header />
+      {/* Header McDonald's with Mobile Menu Support */}
+      <Header onReset={fetchLosses} />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
       <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
@@ -129,6 +134,8 @@ export default function App() {
           {/* Colonne gauche : micro + catégories (side) + export */}
           <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-1.5 md:gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
             <AddLoss onLossAdded={fetchLosses} />
+            
+            <LossTypeTabs activeType={lossType} onChange={setLossType} />
             
             {/* Menu catégories Sidebar (Uniquement Desktop/Tablette) */}
             <nav className="hidden md:flex flex-col gap-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
@@ -155,7 +162,9 @@ export default function App() {
               })}
             </nav>
 
-            <ExportButtons />
+            <div className="hidden md:flex flex-col gap-4 mt-2">
+              <ExportButtons onReset={fetchLosses} />
+            </div>
           </aside>
 
           {/* Colonne droite : recherche + grille de produits */}

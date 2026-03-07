@@ -40,8 +40,8 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
   const handleQuantityChange = async (product: ProductItem, size: string | null, delta: number) => {
     const key = `${product.name}__${size || "null"}`;
     
-    // Pour le poids, le delta est de 100g par clic (plus rapide)
-    const actualDelta = (product.unit_type === 'weight') ? delta * 100 : delta;
+    // Pour le poids et les liquides, le delta est de 100 (g ou ml) par clic
+    const actualDelta = (product.unit_type === 'weight' || product.unit_type === 'liquid') ? delta * 100 : delta;
     const currentQty = localQuantities[key] || 0;
     const newQuantity = Math.max(0, currentQty + actualDelta);
 
@@ -176,18 +176,17 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
               <span className="text-[10px] text-slate-400 font-medium">{size}</span>
             )}
             
-            {/* Affichage intelligent du poids (ex: 1200g -> 1.20 kg) */}
-            {product.unit_type === 'weight' && quantity >= 1000 && (
-              <span className="text-[10px] text-blue-600 font-bold mt-1">
-                ({(quantity / 1000).toFixed(2)} kg)
+            {/* Affichage intelligent du poids/volume */}
+            {product.unit_type === 'weight' && (
+              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : (quantity > 0 ? "g" : "")}
               </span>
             )}
-            
-            {/* Label g pour les autres poids */}
-            {product.unit_type === 'weight' && quantity < 1000 && quantity > 0 && (
-              <span className="text-[10px] text-slate-400 font-medium">g</span>
+            {product.unit_type === 'liquid' && (
+              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : (quantity > 0 ? "ml" : "")}
+              </span>
             )}
-
             {product.unit_type === 'pieces' && (
               <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
             )}
