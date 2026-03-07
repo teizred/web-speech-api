@@ -85,6 +85,11 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
         </div>
 
         <div className="flex-1 space-y-4">
+          {message && (
+            <div className={`p-4 rounded-xl text-center text-sm font-bold animate-in fade-in slide-in-from-top-2 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+              {message.text}
+            </div>
+          )}
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Options</p>
           
           <button
@@ -115,7 +120,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email..."
-                className="w-full mb-2 p-3 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-slate-300 outline-none"
+                className="w-full mb-2 p-3 rounded-xl border border-slate-200 text-sm text-slate-900 focus:ring-2 focus:ring-slate-300 outline-none"
               />
               <div className="flex gap-2">
                 <button 
@@ -127,9 +132,10 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
                 </button>
                 <button 
                   onClick={() => setShowEmailInput(false)} 
-                  className="px-3 bg-white border border-slate-200 py-2 rounded-lg text-sm"
+                  className="px-3 bg-white border border-slate-200 py-2 rounded-lg text-slate-400 hover:text-slate-600 hover:border-slate-300 transition-colors"
+                  title="Annuler"
                 >
-                  X
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
               </div>
             </div>
@@ -148,11 +154,6 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
           </div>
         </div>
 
-        {message && (
-          <div className={`mt-auto p-4 rounded-xl text-center text-sm font-bold ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-            {message.text}
-          </div>
-        )}
       </div>
     </div>
   );
