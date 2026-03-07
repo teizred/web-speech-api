@@ -40,7 +40,7 @@ export default function App() {
   const [losses, setLosses] = useState<Loss[]>([]);
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("");
-  const [lossType, setLossType] = useState<'complet' | 'vide'>('complet');
+  const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fonction pour charger la liste des pertes depuis le serveur
@@ -54,27 +54,50 @@ export default function App() {
     }
   };
 
+  // On charge les données initiales
+  useEffect(() => {
+    fetchLosses();
+  }, []);
+
   // Fonction pour charger les produits depuis la base de données
   const fetchProducts = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/products?type=${lossType}`);
       const data = await response.json();
       setCategories(data);
-      if (data.length > 0) setActiveCategory(data[0].label);
+      
+      // On ne réinitialise la catégorie que si aucune n'est active ou si l'actuelle n'existe plus
+      if (data.length > 0) {
+        const stillExists = data.some((c: ProductCategory) => c.label === activeCategory);
+        if (!activeCategory || !stillExists) {
+          setActiveCategory(data[0].label);
+        }
+      }
     } catch (e) {
       console.error("Erreur lors du chargement des produits", e);
     }
   };
 
-  // On charge les données
-  useEffect(() => {
-    fetchLosses();
-  }, []);
-
   // On recharge les produits quand le type change
   useEffect(() => {
     fetchProducts();
   }, [lossType]);
+
+  // Auto-scroll vers la catégorie active quand les catégories sont mises à jour
+  // (seulement si déclenché par un changement de type de perte)
+  useEffect(() => {
+    if (activeCategory && !searchQuery && categories.length > 0) {
+      const id = activeCategory.toLowerCase().replace(/\s+/g, '-');
+      // On attend que le DOM soit rendu avec les nouvelles IDs
+      const timer = setTimeout(() => {
+        const element = document.getElementById(id);
+        if (element) {
+          scrollToCategory(activeCategory);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [categories]);
 
   // Detection de la section active pour la bottom nav
   useEffect(() => {
@@ -107,9 +130,9 @@ export default function App() {
     if (element) {
       setActiveCategory(label);
       
-      // Décalage adaptatif pour mobile/desktop
+      // Décalage adaptatif pour mobile/desktop (prend en compte le header + contrôles sticky)
       const isMobile = window.innerWidth < 768;
-      const offset = isMobile ? 80 : 20; 
+      const offset = isMobile ? 180 : 130; 
       
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
