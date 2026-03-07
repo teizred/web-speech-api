@@ -52,3 +52,38 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* Orientation Lock Fallback for iOS/PWA */
+@media screen and (orientation: landscape) and (max-width: 1024px) {
+  #root {
+    display: none !important;
+  }
+  
+  body {
+    background-color: #264F36 !important;
+    overflow: hidden;
+  }
+
+  body::after {
+    content: "Veuillez utiliser l'application en mode Portrait pour une meilleure expérience.";
+    position: fixed;
+    inset: 0;
+    background-color: #264F36;
+    background-image: url('/apple-touch-icon.png');
+    background-repeat: no-repeat;
+    background-position: center 35%;
+    background-size: 100px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5;
+    z-index: 9999;
+    padding-top: 140px;
+  }
+}
