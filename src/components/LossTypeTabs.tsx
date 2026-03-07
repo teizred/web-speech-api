@@ -7,7 +7,7 @@ interface LossTypeTabsProps {
 
 export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange }) => {
   return (
-    <div className="flex p-1 bg-white/50 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm mb-6 mx-4">
+    <div className="flex p-1 bg-white/50 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm md:mb-6 md:mx-4">
       <button
         onClick={() => onChange('complet')}
         className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${

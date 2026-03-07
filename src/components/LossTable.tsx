@@ -14,11 +14,11 @@ interface Loss {
 interface LossTableProps {
   losses: Loss[];
   categories: ProductCategory[];
+  searchQuery: string;
   onUpdate: () => void;
 }
 // Le tableau qui affiche toutes les pertes avec les boutons + et -
-export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpdate }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+export const LossTable: React.FC<LossTableProps> = ({ losses, categories, searchQuery, onUpdate }) => {
   
   // État local pour un retour visuel INSTANTANÉ (Optimistic UI)
   const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
@@ -236,20 +236,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, onUpda
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md pt-2 pb-4 px-1 -mx-1">
-        <label className="relative block group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          </div>
-          <input
-            type="text"
-            placeholder="Rechercher un produit..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-10 py-3 bg-slate-100 border-2 border-transparent rounded-2xl text-sm font-medium transition-all focus:bg-white focus:border-blue-500/20 outline-none"
-          />
-        </label>
-      </div>
+      {/* Search Input removed from here - now managed by App.tsx */}
 
       {filteredCategories.length === 0 && (
         <div className="py-20 text-center text-slate-400">

@@ -41,6 +41,7 @@ export default function App() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [lossType, setLossType] = useState<'complet' | 'vide'>('complet');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
@@ -131,11 +132,14 @@ export default function App() {
       <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
         <div className="flex flex-col md:flex-row md:gap-6 lg:gap-8 items-start">
           
-          {/* Colonne gauche : micro + catégories (side) + export */}
+          {/* Colonne gauche : micro + catégories (side) + export (Desktop) */}
           <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-1.5 md:gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
             <AddLoss onLossAdded={fetchLosses} />
             
-            <LossTypeTabs activeType={lossType} onChange={setLossType} />
+            {/* Barre de contrôles (Desktop uniquement ici, car Mobile est géré plus bas pour être globalement sticky) */}
+            <div className="hidden md:block">
+              <LossTypeTabs activeType={lossType} onChange={setLossType} />
+            </div>
             
             {/* Menu catégories Sidebar (Uniquement Desktop/Tablette) */}
             <nav className="hidden md:flex flex-col gap-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
@@ -169,7 +173,40 @@ export default function App() {
 
           {/* Colonne droite : recherche + grille de produits */}
           <main className="w-full md:flex-1 md:min-w-0">
-            <LossTable losses={losses} categories={categories} onUpdate={fetchLosses} />
+            {/* Barre de contrôles collante sur Mobile (Placée ici pour être sticky par rapport au défilement de la liste) */}
+            <div className="md:hidden sticky top-[calc(env(safe-area-inset-top,0px)+56px)] z-30 bg-slate-50/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 mb-2">
+              <LossTypeTabs activeType={lossType} onChange={setLossType} />
+              
+              <label className="relative block group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher un produit..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#264F36]/20 outline-none"
+                />
+              </label>
+            </div>
+
+            {/* Barre de recherche (Desktop uniquement ici, en haut de la liste) */}
+            <div className="hidden md:block mb-6 sticky top-[calc(env(safe-area-inset-top,0px)+56px)] z-20 bg-slate-50/95 backdrop-blur-md py-2 px-1">
+              <label className="relative block group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Rechercher un produit..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#264F36]/20 outline-none"
+                />
+              </label>
+            </div>
+            <LossTable losses={losses} categories={categories} searchQuery={searchQuery} onUpdate={fetchLosses} />
           </main>
         </div>
       </div>
