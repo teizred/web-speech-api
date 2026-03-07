@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Header } from "./components/Header";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
@@ -42,6 +42,9 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Flag pour savoir si le changement vient d'un clic utilisateur
+  const manualChangeRef = useRef(false);
 
   // Fonction pour charger la liste des pertes depuis le serveur
   const fetchLosses = async () => {
@@ -84,20 +87,25 @@ export default function App() {
   }, [lossType]);
 
   // Auto-scroll vers la catégorie active quand les catégories sont mises à jour
-  // (seulement si déclenché par un changement de type de perte)
+  // UNIQUEMENT si c'est un changement manuel (clic sur bouton)
   useEffect(() => {
-    if (activeCategory && !searchQuery && categories.length > 0) {
+    if (manualChangeRef.current && activeCategory && !searchQuery && categories.length > 0) {
       const id = activeCategory.toLowerCase().replace(/\s+/g, '-');
-      // On attend que le DOM soit rendu avec les nouvelles IDs
       const timer = setTimeout(() => {
         const element = document.getElementById(id);
         if (element) {
           scrollToCategory(activeCategory);
         }
+        manualChangeRef.current = false; // Reset après le scroll
       }, 150);
       return () => clearTimeout(timer);
     }
   }, [categories]);
+
+  const handleTypeChange = (type: 'complet' | 'vide') => {
+    manualChangeRef.current = true;
+    setLossType(type);
+  };
 
   // Detection de la section active pour la bottom nav
   useEffect(() => {
@@ -161,7 +169,7 @@ export default function App() {
             
             {/* Barre de contrôles (Desktop uniquement ici, car Mobile est géré plus bas pour être globalement sticky) */}
             <div className="hidden md:block">
-              <LossTypeTabs activeType={lossType} onChange={setLossType} />
+              <LossTypeTabs activeType={lossType} onChange={handleTypeChange} />
             </div>
             
             {/* Menu catégories Sidebar (Uniquement Desktop/Tablette) */}
@@ -198,7 +206,7 @@ export default function App() {
           <main className="w-full md:flex-1 md:min-w-0">
             {/* Barre de contrôles collante sur Mobile (Placée ici pour être sticky par rapport au défilement de la liste) */}
             <div className="md:hidden sticky top-[calc(env(safe-area-inset-top,0px)+56px)] z-30 bg-slate-50/95 backdrop-blur-md pt-2 pb-4 -mx-4 px-4 mb-2">
-              <LossTypeTabs activeType={lossType} onChange={setLossType} />
+              <LossTypeTabs activeType={lossType} onChange={handleTypeChange} />
               
               <label className="relative block group">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
