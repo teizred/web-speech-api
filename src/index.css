@@ -20,12 +20,9 @@
     overscroll-behavior-y: none;
   }
 
-  /* Support des encoches iPhone (Safe Area) */
+  /* Support des encoches iPhone (Safe Area) géré par composant */
   #root {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
+    min-height: 100vh;
   }
 }
 
@@ -48,8 +45,10 @@
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
-input[type=number] {
+input[type="number"] {
   -moz-appearance: textfield;
+  appearance: textfield;
 }

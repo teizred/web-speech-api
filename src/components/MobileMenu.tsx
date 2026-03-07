@@ -76,7 +76,7 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
       
       {/* Menu Content */}
-      <div className="relative w-72 h-full bg-white shadow-2xl flex flex-col p-6 animate-in slide-in-from-right duration-300">
+      <div className="relative w-72 h-full bg-white shadow-2xl flex flex-col p-6 pt-[calc(env(safe-area-inset-top,0px)+1.5rem)] pb-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] animate-in slide-in-from-right duration-300">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-xl font-bold text-slate-800">Menu</h2>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600">
