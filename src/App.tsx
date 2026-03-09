@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Header } from "./components/Header";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
@@ -47,7 +47,7 @@ export default function App() {
   const manualChangeRef = useRef(false);
 
   // Fonction pour charger la liste des pertes depuis le serveur
-  const fetchLosses = async () => {
+  const fetchLosses = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/losses`);
       const data = await response.json();
@@ -55,12 +55,12 @@ export default function App() {
     } catch (e) {
       console.error("Erreur lors du chargement des pertes", e);
     }
-  };
+  }, []);
 
   // On charge les données initiales
   useEffect(() => {
     fetchLosses();
-  }, []);
+  }, [fetchLosses]);
 
   // Fonction pour charger les produits depuis la base de données
   const fetchProducts = async () => {

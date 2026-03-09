@@ -17,43 +17,36 @@ interface LossTableProps {
   searchQuery: string;
   onUpdate: () => void;
 }
-// Le tableau qui affiche toutes les pertes avec les boutons + et -
-export const LossTable: React.FC<LossTableProps> = ({ losses, categories, searchQuery, onUpdate }) => {
-  
-  // État local pour un retour visuel INSTANTANÉ (Optimistic UI)
-  const [localQuantities, setLocalQuantities] = useState<Record<string, number>>({});
-
-  // Sync local quantities with props when they change
-  React.useEffect(() => {
-    const newLocal: Record<string, number> = {};
-    losses.forEach(loss => {
-      const key = `${loss.product}__${loss.size || "null"}`;
-      newLocal[key] = (newLocal[key] || 0) + loss.quantity;
-    });
-    setLocalQuantities(newLocal);
-  }, [losses]);
-
-  // Petit helper pour le debounce de la saisie manuelle
+const ProductCard = React.memo(({ 
+  product, 
+  size, 
+  initialQuantity, 
+  existingLossId, 
+  onUpdate 
+}: {
+  product: ProductItem;
+  size: string | null;
+  initialQuantity: number;
+  existingLossId: number | null;
+  onUpdate: () => void;
+}) => {
+  const [quantity, setQuantity] = useState(initialQuantity);
+  const [isLoading, setIsLoading] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState<any>(null);
 
-  // Changement de quantité avec les boutons + et -
-  const handleQuantityChange = async (product: ProductItem, size: string | null, delta: number) => {
-    const key = `${product.name}__${size || "null"}`;
-    
-    // Pour le poids et les liquides, le delta est de 100 (g ou ml) par clic
+  React.useEffect(() => {
+    setQuantity(initialQuantity);
+  }, [initialQuantity]);
+
+  const handleQuantityChange = async (delta: number) => {
     const actualDelta = (product.unit_type === 'weight' || product.unit_type === 'liquid') ? delta * 100 : delta;
-    const currentQty = localQuantities[key] || 0;
-    const newQuantity = Math.max(0, currentQty + actualDelta);
+    const newQuantity = Math.max(0, quantity + actualDelta);
+    setQuantity(newQuantity);
 
-    // 1. MISE À JOUR OPTIMISTE (instantanée)
-    setLocalQuantities(prev => ({ ...prev, [key]: newQuantity }));
-
+    setIsLoading(true);
     try {
-      // On cherche si on a déjà une ligne en base pour ce produit/taille
-      const existingLoss = losses.find(l => l.product === product.name && (l.size === size || (!l.size && !size)));
-
-      if (existingLoss) {
-        await fetch(`${API_BASE_URL}/api/losses/${existingLoss.id}`, {
+      if (existingLossId) {
+        await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
@@ -73,32 +66,26 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
           }),
         });
       }
-      onUpdate(); // Refresh global mais sans bloquer l'UI
+      onUpdate();
     } catch (e) {
       console.error(e);
-      // Rollback en cas d'erreur
       onUpdate();
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Sauvegarde des changements manuels au clavier (DEBOUNCED)
-  const handleEditSave = (product: ProductItem, size: string | null, newValue: number) => {
-    const key = `${product.name}__${size || "null"}`;
-    
+  const handleEditSave = (newValue: number) => {
     if (newValue < 0) return;
+    setQuantity(newValue);
 
-    // 1. Mise à jour immédiate à l'écran
-    setLocalQuantities(prev => ({ ...prev, [key]: newValue }));
-
-    // 2. On annule le timer précédent s'il existe
     if (saveTimeout) clearTimeout(saveTimeout);
 
-    // 3. On lance le timer pour sauvegarder dans 500ms
     const timeout = setTimeout(async () => {
+      setIsLoading(true);
       try {
-        const existingLoss = losses.find(l => l.product === product.name && (l.size === size || (!l.size && !size)));
-        if (existingLoss) {
-          await fetch(`${API_BASE_URL}/api/losses/${existingLoss.id}`, {
+        if (existingLossId) {
+          await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -122,11 +109,98 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
       } catch (e) {
         console.error(e);
         onUpdate();
+      } finally {
+        setIsLoading(false);
       }
     }, 500);
-
     setSaveTimeout(timeout);
   };
+
+  return (
+    <div
+      className={`
+        relative bg-white rounded-xl border shadow-sm p-3 flex flex-col items-center gap-2 text-center transition-all
+        ${quantity > 0 ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-100'}
+      `}
+    >
+      <div className="flex flex-col justify-center min-h-[44px] w-full">
+        <span className={`text-[11px] font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
+          {product.name}
+        </span>
+        {size && (
+          <span className="text-[10px] text-slate-400 font-medium">{size}</span>
+        )}
+        
+        {product.unit_type === 'weight' && (
+          <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+            {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : (quantity > 0 ? "g" : "")}
+          </span>
+        )}
+        {product.unit_type === 'liquid' && (
+          <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+            {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : (quantity > 0 ? "ml" : "")}
+          </span>
+        )}
+        {product.unit_type === 'pieces' && (
+          <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1 w-full justify-between mt-auto">
+        <button
+          onClick={() => handleQuantityChange(-1)}
+          disabled={isLoading || quantity === 0}
+          className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 active:scale-90 transition-all disabled:opacity-30"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+
+        <input
+          type="number"
+          value={quantity === 0 ? "" : quantity}
+          placeholder="0"
+          onChange={(e) => {
+            const val = parseInt(e.target.value);
+            handleEditSave(isNaN(val) ? 0 : val);
+          }}
+          className={`w-14 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none
+            ${quantity > 0 ? 'text-red-600 font-bold' : 'text-slate-400'}
+          `}
+        />
+
+        <button
+          onClick={() => handleQuantityChange(1)}
+          disabled={isLoading}
+          className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 active:scale-90 transition-all"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-20">
+          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// Le tableau qui affiche toutes les pertes avec les boutons + et -
+export const LossTable: React.FC<LossTableProps> = ({ losses, categories, searchQuery, onUpdate }) => {
+  
+  // Create a memoized map of losses for quick lookup
+  const initialQuantities = React.useMemo(() => {
+    const map: Record<string, { quantity: number; id: number | null }> = {};
+    losses.forEach(loss => {
+      const key = `${loss.product}__${loss.size || "null"}`;
+      if (!map[key]) {
+        map[key] = { quantity: 0, id: loss.id };
+      }
+      map[key].quantity += loss.quantity;
+    });
+    return map;
+  }, [losses]);
 
   const getSizes = (product: ProductItem): (string | null)[] => {
     if (product.sizes && product.sizes.length > 0) return product.sizes;
@@ -150,86 +224,23 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
       subcategories: filteredSubcategories,
       products: filteredDirectProducts
     };
-  }).filter((group: any) => group.subcategories.length > 0 || (group.directProducts && group.directProducts.length > 0) || (group.products && group.products.length > 0));
+  }).filter((group: any) => group.subcategories.length > 0 || (group.products && group.products.length > 0));
 
   const renderProduct = (product: ProductItem) => {
     const sizes = getSizes(product);
     return sizes.map((size) => {
       const key = `${product.name}__${size || "null"}`;
-      const quantity = localQuantities[key] || 0;
-      const isLoading = false;
+      const lossData = initialQuantities[key] || { quantity: 0, id: null };
 
       return (
-        <div
+        <ProductCard
           key={key}
-          className={`
-            relative bg-white rounded-xl border shadow-sm p-3 flex flex-col items-center gap-2 text-center transition-all
-            ${quantity > 0 ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-100'}
-          `}
-        >
-          {/* Header Produit */}
-          <div className="flex flex-col justify-center min-h-[44px] w-full">
-            <span className={`text-[11px] font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
-              {product.name}
-            </span>
-            {size && (
-              <span className="text-[10px] text-slate-400 font-medium">{size}</span>
-            )}
-            
-            {/* Affichage intelligent du poids/volume */}
-            {product.unit_type === 'weight' && (
-              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : (quantity > 0 ? "g" : "")}
-              </span>
-            )}
-            {product.unit_type === 'liquid' && (
-              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : (quantity > 0 ? "ml" : "")}
-              </span>
-            )}
-            {product.unit_type === 'pieces' && (
-              <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
-            )}
-          </div>
-
-          {/* Contrôles Quantité */}
-          <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1 w-full justify-between mt-auto">
-            <button
-              onClick={() => handleQuantityChange(product, size, -1)}
-              disabled={isLoading || quantity === 0}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 active:scale-90 transition-all disabled:opacity-30"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-
-            <input
-              type="number"
-              value={quantity === 0 ? "" : quantity}
-              placeholder="0"
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                handleEditSave(product, size, isNaN(val) ? 0 : val);
-              }}
-              className={`w-14 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none
-                ${quantity > 0 ? 'text-red-600 font-bold' : 'text-slate-400'}
-              `}
-            />
-
-            <button
-              onClick={() => handleQuantityChange(product, size, 1)}
-              disabled={isLoading}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 active:scale-90 transition-all"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
-          </div>
-
-          {isLoading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-20">
-              <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
-        </div>
+          product={product}
+          size={size}
+          initialQuantity={lossData.quantity}
+          existingLossId={lossData.id}
+          onUpdate={onUpdate}
+        />
       );
     });
   };
