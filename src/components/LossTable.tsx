@@ -32,7 +32,6 @@ const ProductCard = React.memo(({
 }) => {
   const [quantity, setQuantity] = useState(initialQuantity);
   const [isLoading, setIsLoading] = useState(false);
-  const [saveTimeout, setSaveTimeout] = useState<any>(null);
 
   React.useEffect(() => {
     setQuantity(initialQuantity);
@@ -75,45 +74,52 @@ const ProductCard = React.memo(({
     }
   };
 
-  const handleEditSave = (newValue: number) => {
-    if (newValue < 0) return;
-    setQuantity(newValue);
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setQuantity(isNaN(val) ? 0 : val);
+  };
 
-    if (saveTimeout) clearTimeout(saveTimeout);
+  const saveManualEdit = async () => {
+    if (quantity === initialQuantity) return; // Pas de changement
+    if (quantity < 0) return;
 
-    const timeout = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        if (existingLossId) {
-          await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              quantity: newValue,
-              unit: product.unit_type === 'weight' ? 'g' : 'unit'
-            }),
-          });
-        } else if (newValue > 0) {
-          await fetch(`${API_BASE_URL}/api/losses/manual`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              product: product.name, 
-              quantity: newValue, 
-              size,
-              unit: product.unit_type === 'weight' ? 'g' : 'unit'
-            }),
-          });
-        }
-        onUpdate();
-      } catch (e) {
-        console.error(e);
-        onUpdate();
-      } finally {
-        setIsLoading(false);
+    setIsLoading(true);
+    try {
+      if (existingLossId) {
+        await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            quantity: quantity,
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
+        });
+      } else if (quantity > 0) {
+        await fetch(`${API_BASE_URL}/api/losses/manual`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            product: product.name, 
+            quantity: quantity, 
+            size,
+            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+          }),
+        });
       }
-    }, 500);
-    setSaveTimeout(timeout);
+      onUpdate();
+    } catch (e) {
+      console.error(e);
+      setQuantity(initialQuantity); // Rollback
+      onUpdate();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
   };
 
   return (
@@ -159,10 +165,9 @@ const ProductCard = React.memo(({
           type="number"
           value={quantity === 0 ? "" : quantity}
           placeholder="0"
-          onChange={(e) => {
-            const val = parseInt(e.target.value);
-            handleEditSave(isNaN(val) ? 0 : val);
-          }}
+          onChange={handleEditChange}
+          onBlur={saveManualEdit}
+          onKeyDown={handleKeyDown}
           className={`w-14 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none
             ${quantity > 0 ? 'text-red-600 font-bold' : 'text-slate-400'}
           `}
