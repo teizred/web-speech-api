@@ -6,6 +6,7 @@ import { ExportButtons } from "./components/ExportButtons";
 import { BottomNav } from "./components/BottomNav";
 import { API_BASE_URL } from "./config/api";
 import { LossTypeTabs } from "./components/LossTypeTabs";
+import { HistoryModal } from "./components/HistoryModal";
 
 interface Loss {
   id: number;
@@ -43,6 +44,7 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState<string>("");
   const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
+  const [historyDate, setHistoryDate] = useState<string | null>(null);
   
   // Flag pour savoir si le changement vient d'un clic utilisateur
   const manualChangeRef = useRef(false);
@@ -158,7 +160,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24 md:pb-0">
       {/* Header McDonald's with Mobile Menu Support */}
-      <Header onReset={fetchLosses} />
+      <Header onReset={fetchLosses} onHistorySelect={(date) => setHistoryDate(date)} />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
       <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
@@ -205,7 +207,7 @@ export default function App() {
             </nav>
 
             <div className="hidden md:flex flex-col gap-4 mt-2">
-              <ExportButtons onReset={fetchLosses} />
+              <ExportButtons onReset={fetchLosses} onHistorySelect={(date) => setHistoryDate(date)} />
             </div>
           </aside>
 
@@ -249,12 +251,19 @@ export default function App() {
         </div>
       </div>
 
-      {/* Barre de navigation basse (Mobile uniquement) */}
-      <BottomNav 
-        categories={categories} 
-        activeCategory={activeCategory} 
-        onCategoryClick={scrollToCategory} 
-      />
+      {/* History Modal */}
+      {historyDate && (
+        <HistoryModal date={historyDate} onClose={() => setHistoryDate(null)} />
+      )}
+
+      {/* Barre de navigation basse (Mobile uniquement — cachée quand l'historique est ouvert) */}
+      {!historyDate && (
+        <BottomNav 
+          categories={categories} 
+          activeCategory={activeCategory} 
+          onCategoryClick={scrollToCategory} 
+        />
+      )}
     </div>
   );
 }
