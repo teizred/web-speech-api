@@ -1,6 +1,20 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
+@theme {
+  --color-green-50: #eef5f0;
+  --color-green-100: #d5eadd;
+  --color-green-200: #aed2bc;
+  --color-green-300: #7fb395;
+  --color-green-400: #559470;
+  --color-green-500: #337550;
+  --color-green-600: #00420b;
+  --color-green-700: #003609;
+  --color-green-800: #002907;
+  --color-green-900: #001c05;
+  --color-green-950: #000f03;
+}
+
 @layer base {
   * {
     margin: 0;
@@ -60,7 +74,7 @@ input[type="number"] {
   }
   
   body {
-    background-color: #264F36 !important;
+    background-color: #00420b !important;
     overflow: hidden;
   }
 
@@ -68,7 +82,7 @@ input[type="number"] {
     content: "Veuillez utiliser l'application en mode Portrait pour une meilleure expérience.";
     position: fixed;
     inset: 0;
-    background-color: #264F36;
+    background-color: #00420b;
     background-image: url('/apple-touch-icon.png');
     background-repeat: no-repeat;
     background-position: center 35%;

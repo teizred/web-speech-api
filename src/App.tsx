@@ -224,7 +224,7 @@ export default function App() {
                   placeholder="Rechercher un produit..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#264F36]/20 outline-none"
+                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#00420b]/20 outline-none"
                 />
               </label>
             </div>
@@ -240,7 +240,7 @@ export default function App() {
                   placeholder="Rechercher un produit..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#264F36]/20 outline-none"
+                  className="w-full pl-11 pr-10 py-3 bg-white border-2 border-slate-100 rounded-2xl text-sm font-medium shadow-sm transition-all focus:border-[#00420b]/20 outline-none"
                 />
               </label>
             </div>

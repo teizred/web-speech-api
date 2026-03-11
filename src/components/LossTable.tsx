@@ -130,11 +130,11 @@ const ProductCard = React.memo(({
       `}
     >
       <div className="flex flex-col justify-center min-h-[44px] w-full">
-        <span className={`text-[11px] font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
+        <span className={`text-sm md:text-base font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
           {product.name}
         </span>
         {size && (
-          <span className="text-[10px] text-slate-400 font-medium">{size}</span>
+          <span className="text-xs text-slate-500 font-medium">{size}</span>
         )}
         
         {product.unit_type === 'weight' && (
@@ -275,7 +275,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
         return (
           <div key={group.label} id={categoryId} className="space-y-6 scroll-mt-[180px] md:scroll-mt-[130px]">
             <div className="sticky top-[calc(env(safe-area-inset-top,0px)+168px)] md:top-[calc(env(safe-area-inset-top,0px)+112px)] bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-200/50">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-1">
+              <h3 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-[0.1em] px-1">
                 {group.label}
               </h3>
             </div>
@@ -288,7 +288,7 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
 
             {group.subcategories.map((sub) => (
               <div key={sub.name} className="space-y-3">
-                <h4 className="text-[10px] font-bold text-slate-300 px-1 italic">
+                <h4 className="text-xs md:text-sm font-bold text-slate-400 px-1 italic">
                   — {sub.name}
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">

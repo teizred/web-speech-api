@@ -9,7 +9,7 @@ export const Header: React.FC<HeaderProps> = ({ onReset }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-[#264F36] text-white shadow-md sticky top-0 z-40 pt-[env(safe-area-inset-top,0px)]">
+    <header className="bg-[#00420b] text-white shadow-md sticky top-0 z-40 pt-[env(safe-area-inset-top,0px)]">
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center gap-3">
         {/* McDonald's Logo */}
         <img

@@ -12,7 +12,7 @@ export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange
         onClick={() => onChange('vide')}
         className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
           activeType === 'vide'
-            ? 'bg-[#264F36] text-white shadow-lg shadow-[#264F36]/20'
+            ? 'bg-[#00420b] text-white shadow-lg shadow-[#00420b]/20'
             : 'text-slate-600 hover:bg-slate-100'
         }`}
       >
@@ -23,7 +23,7 @@ export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange
         onClick={() => onChange('complet')}
         className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
           activeType === 'complet'
-            ? 'bg-[#264F36] text-white shadow-lg shadow-[#264F36]/20'
+            ? 'bg-[#00420b] text-white shadow-lg shadow-[#00420b]/20'
             : 'text-slate-600 hover:bg-slate-100'
         }`}
       >
