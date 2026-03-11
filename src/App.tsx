@@ -117,17 +117,24 @@ export default function App() {
 
   // Detection de la section active pour la bottom nav
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const margin = isMobile ? "-180px 0px -80% 0px" : "-130px 0px -85% 0px";
+
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // L'ID est généré de la même façon que dans LossTable
-            const label = categories.find(c => c.label.toLowerCase().replace(/\s+/g, '-') === entry.target.id)?.label;
-            if (label) setActiveCategory(label);
-          }
-        });
+        // On récupère toutes les sections qui intersectent
+        const intersecting = entries.filter(e => e.isIntersecting);
+        
+        if (intersecting.length > 0) {
+          // On trie par position top pour prendre celle qui est la plus haute dans la zone de détection
+          intersecting.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+          const topVisible = intersecting[0];
+          
+          const label = categories.find(c => c.label.toLowerCase().replace(/\s+/g, '-') === topVisible.target.id)?.label;
+          if (label) setActiveCategory(label);
+        }
       },
-      { threshold: 0.3, rootMargin: "-80px 0px -50% 0px" }
+      { threshold: 0, rootMargin: margin }
     );
 
     categories.forEach((cat) => {
@@ -192,7 +199,7 @@ export default function App() {
                     key={cat.label}
                     onClick={() => scrollToCategory(cat.label)}
                     className={`w-full justify-start px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-3 active:scale-[0.98]
-                      ${isActive ? 'bg-[#E11D48] text-white shadow-md' : 'hover:bg-slate-100 text-slate-700'}
+                      ${isActive ? 'bg-[#FFC72C] text-slate-900 shadow-md ring-2 ring-[#FFC72C]/20' : 'hover:bg-slate-100 text-slate-700'}
                     `}
                   >
                     {cat.icon ? (
@@ -203,7 +210,7 @@ export default function App() {
                       </span>
                     )}
                     <span className="flex-1 text-left">{cat.label}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-black/10 text-slate-900' : 'bg-slate-100 text-slate-400'}`}>
                       {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
                     </span>
                   </button>

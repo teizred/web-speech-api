@@ -23,18 +23,18 @@ export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory
               onClick={() => onCategoryClick(cat.label)}
               className={`
                 flex flex-col items-center justify-center min-w-[85px] py-1.5 px-1 rounded-xl transition-all active:scale-90 shrink-0
-                ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
+                ${isActive ? 'text-[#FFC72C]' : 'text-slate-400'}
               `}
             >
               {cat.icon ? (
                 <img src={cat.icon} alt={cat.label} className={`w-7 h-7 object-contain mb-0.5 transition-transform ${isActive ? 'scale-110' : 'opacity-70'}`} />
               ) : (
-                <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold mb-0.5 transition-transform ${isActive ? 'scale-110 bg-[#E11D48] text-white' : 'bg-slate-100 text-slate-500 opacity-70'}`}>
+                <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold mb-0.5 transition-transform ${isActive ? 'scale-110 bg-[#FFC72C] text-slate-900' : 'bg-slate-100 text-slate-500 opacity-70'}`}>
                   {cat.label.charAt(0)}
                 </span>
               )}
               <span className={`text-[9px] font-extrabold text-center uppercase tracking-tight leading-tight max-w-full
-                ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
+                ${isActive ? 'text-[#FFC72C]' : 'text-slate-400'}
               `}>
                 {cat.label}
               </span>
