@@ -109,7 +109,7 @@ export const ExportButtons = ({ onReset, onHistorySelect }: ExportButtonsProps) 
           ref={dateInputRef}
           type="date"
           max={new Date().toISOString().split("T")[0]}
-          className="absolute inset-0 opacity-0 pointer-events-none"
+          className="sr-only"
           onChange={(e) => {
             if (e.target.value && onHistorySelect) {
               onHistorySelect(e.target.value);
