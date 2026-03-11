@@ -31,6 +31,7 @@ export interface ProductSubcategory {
 
 export interface ProductCategory {
   label: string;
+  icon: string | null;
   subcategories: ProductSubcategory[];
   products: ProductItem[];
 }
@@ -187,8 +188,14 @@ export default function App() {
                       ${isActive ? 'bg-[#E11D48] text-white shadow-md' : 'hover:bg-slate-100 text-slate-700'}
                     `}
                   >
-                    <span className="text-lg">{cat.label.split(' ')[0]}</span>
-                    <span className="flex-1 text-left">{cat.label.split(' ').slice(1).join(' ')}</span>
+                    {cat.icon ? (
+                      <img src={cat.icon} alt={cat.label} className="w-6 h-6 object-contain rounded-sm" />
+                    ) : (
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>
+                        {cat.label.charAt(0)}
+                      </span>
+                    )}
+                    <span className="flex-1 text-left">{cat.label}</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
                       {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
                     </span>

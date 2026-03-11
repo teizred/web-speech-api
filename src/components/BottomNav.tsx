@@ -16,8 +16,6 @@ export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory
       <div className="flex items-center gap-1 overflow-x-auto no-scrollbar scroll-smooth px-2 relative">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.label;
-          const [emoji, ...textParts] = cat.label.split(' ');
-          const label = textParts.join(' ');
 
           return (
             <button
@@ -28,13 +26,17 @@ export const BottomNav: React.FC<BottomNavProps> = ({ categories, activeCategory
                 ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
               `}
             >
-              <span className={`text-xl mb-0.5 transition-transform ${isActive ? 'scale-110' : 'grayscale-[0.5] opacity-70'}`}>
-                {emoji}
-              </span>
+              {cat.icon ? (
+                <img src={cat.icon} alt={cat.label} className={`w-7 h-7 object-contain mb-0.5 transition-transform ${isActive ? 'scale-110' : 'opacity-70'}`} />
+              ) : (
+                <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold mb-0.5 transition-transform ${isActive ? 'scale-110 bg-[#E11D48] text-white' : 'bg-slate-100 text-slate-500 opacity-70'}`}>
+                  {cat.label.charAt(0)}
+                </span>
+              )}
               <span className={`text-[9px] font-extrabold text-center uppercase tracking-tight leading-tight max-w-full
                 ${isActive ? 'text-[#E11D48]' : 'text-slate-400'}
               `}>
-                {label}
+                {cat.label}
               </span>
             </button>
           );

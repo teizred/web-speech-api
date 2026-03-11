@@ -16,7 +16,7 @@ export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange
             : 'text-slate-600 hover:bg-slate-100'
         }`}
       >
-        <span className="text-lg">🥩</span>
+        <img src="/vide.png" alt="Pertes Vides" className="w-8 h-8 object-contain" />
         Pertes Vides
       </button>
       <button
@@ -27,7 +27,7 @@ export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange
             : 'text-slate-600 hover:bg-slate-100'
         }`}
       >
-        <span className="text-lg">🍔</span>
+        <img src="/complet.png" alt="Pertes Complètes" className="w-8 h-8 object-contain" />
         Pertes Complètes
       </button>
     </div>

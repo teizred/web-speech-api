@@ -50,7 +50,7 @@ const ProductCard = React.memo(({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             quantity: newQuantity,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
           }),
         });
       } else if (delta > 0) {
@@ -61,7 +61,7 @@ const ProductCard = React.memo(({
             product: product.name, 
             quantity: actualDelta, 
             size,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
           }),
         });
       }
@@ -91,7 +91,7 @@ const ProductCard = React.memo(({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             quantity: quantity,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
           }),
         });
       } else if (quantity > 0) {
@@ -102,7 +102,7 @@ const ProductCard = React.memo(({
             product: product.name, 
             quantity: quantity, 
             size,
-            unit: product.unit_type === 'weight' ? 'g' : 'unit'
+            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
           }),
         });
       }
@@ -138,14 +138,24 @@ const ProductCard = React.memo(({
         )}
         
         {product.unit_type === 'weight' && (
-          <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-            {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : (quantity > 0 ? "g" : "")}
-          </span>
+          <div className="flex flex-col items-center">
+            {quantity > 0 && (
+              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : "g"}
+              </span>
+            )}
+            <span className="text-[9px] text-orange-500 font-bold uppercase tracking-tighter mt-0.5">g / kg</span>
+          </div>
         )}
         {product.unit_type === 'liquid' && (
-          <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-            {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : (quantity > 0 ? "ml" : "")}
-          </span>
+          <div className="flex flex-col items-center">
+            {quantity > 0 && (
+              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
+                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : "ml"}
+              </span>
+            )}
+            <span className="text-[9px] text-cyan-600 font-bold uppercase tracking-tighter mt-0.5">ml / L</span>
+          </div>
         )}
         {product.unit_type === 'pieces' && (
           <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
