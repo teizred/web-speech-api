@@ -107,20 +107,21 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
             Accueil
           </button>
 
-          <div className="relative w-full">
-            <button
-              className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-2xl font-bold text-slate-700 active:scale-95 transition-all border border-slate-100"
-            >
-              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-              </div>
-              Historique
-            </button>
+          <button
+            onClick={() => dateInputRef.current?.showPicker()}
+            className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-2xl font-bold text-slate-700 active:scale-95 transition-all border border-slate-100"
+          >
+            <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            </div>
+            Historique
+          </button>
+          
+          <div className="overflow-hidden w-0 h-0 absolute">
             <input
               ref={dateInputRef}
               type="date"
               max={new Date().toISOString().split("T")[0]}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={(e) => {
                 if (e.target.value) {
                   onHistorySelect(e.target.value);
