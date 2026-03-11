@@ -43,6 +43,8 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
   const [success, setSuccess] = useState<string | null>(null);
   // Nouvel état : les items parsés par l'IA en attente de validation
   const [pendingItems, setPendingItems] = useState<ParsedItem[] | null>(null);
+  // État pour l'accordion d'info
+  const [showInfo, setShowInfo] = useState(false);
 
   // Notre hook magique qui s'occupe de la reconnaissance vocale
   const { isListening, text, startListening, stopListening } = useSpeechRecognition();
@@ -139,9 +141,50 @@ export const AddLoss: React.FC<AddLossProps> = ({ onLossAdded }) => {
     <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 md:p-8 flex flex-col items-center text-center space-y-4 md:space-y-8">
       
       {/* Card Header */}
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold text-slate-800">Dicter vos pertes</h2>
-        <p className="text-slate-400 text-xs md:text-sm mt-1">Appuyez sur le micro et parlez</p>
+      <div className="w-full">
+        <h2 className="text-xl md:text-2xl font-bold text-slate-800 text-center">Dicter vos pertes</h2>
+        <p className="text-slate-400 text-xs md:text-sm mt-1 text-center">Appuyez sur le micro et parlez</p>
+        
+        {/* Accordion Info */}
+        <button
+          onClick={() => setShowInfo(!showInfo)}
+          className="flex items-center gap-1.5 mx-auto mt-3 text-xs font-medium text-blue-500 hover:text-blue-600 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+          </svg>
+          Comment ça marche ?
+          <svg
+            xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            className={`transition-transform duration-300 ${showInfo ? 'rotate-180' : ''}`}
+          >
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+
+        {/* Contenu accordion */}
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showInfo ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0 mt-0'}`}>
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-left text-sm space-y-3">
+            <div className="space-y-1.5">
+              <p className="font-semibold text-blue-800 text-xs uppercase tracking-wider">Étapes :</p>
+              <ol className="list-decimal list-inside text-blue-700 text-xs space-y-0.5">
+                <li>Appuyez sur le micro</li>
+                <li>Dictez vos pertes naturellement</li>
+                <li>Vérifiez le résultat de l'IA</li>
+                <li>Confirmez pour enregistrer</li>
+              </ol>
+            </div>
+            <div className="space-y-1.5">
+              <p className="font-semibold text-blue-800 text-xs uppercase tracking-wider">Exemples :</p>
+              <div className="space-y-1">
+                <p className="text-xs text-blue-700"><span className="italic">"cinq dix un"</span> → 5× 10:1</p>
+                <p className="text-xs text-blue-700"><span className="italic">"trois pain royal et un litre de sauce tasty"</span> → 3× Pain Royal + 1000ml Sauce Tasty</p>
+                <p className="text-xs text-blue-700"><span className="italic">"deux coca moyen"</span> → 2× Coca-Cola (Moyen)</p>
+              </div>
+            </div>
+            <p className="text-[11px] text-blue-500 font-medium">💡 Vous pouvez dicter plusieurs produits en une seule phrase !</p>
+          </div>
+        </div>
       </div>
 
       {/* Mic Button — caché quand on a une preview en cours */}
