@@ -99,8 +99,7 @@ export const ExportButtons = ({ onReset, onHistorySelect }: ExportButtonsProps) 
         📤 Exporter les pertes
       </h3>
 
-      {/* Bouton Historique */}
-      <label className="w-full relative cursor-pointer active:scale-[0.98] transition-all">
+      <label className="block w-full relative cursor-pointer active:scale-[0.98] transition-all">
         <div className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 px-6 rounded-xl flex items-center justify-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
           Historique
@@ -109,7 +108,15 @@ export const ExportButtons = ({ onReset, onHistorySelect }: ExportButtonsProps) 
           ref={dateInputRef}
           type="date"
           max={new Date().toISOString().split("T")[0]}
-          className="sr-only"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+          onClick={(e) => {
+            // Sur desktop, on force l'ouverture du picker natif
+            try {
+              (e.target as HTMLInputElement).showPicker();
+            } catch (err) {
+              console.log("showPicker non supporté ou bloqué");
+            }
+          }}
           onChange={(e) => {
             if (e.target.value && onHistorySelect) {
               onHistorySelect(e.target.value);

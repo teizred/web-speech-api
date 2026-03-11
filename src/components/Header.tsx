@@ -3,10 +3,9 @@ import { MobileMenu } from "./MobileMenu";
 
 interface HeaderProps {
   onReset?: () => void;
-  onHistorySelect?: (date: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onReset, onHistorySelect }) => {
+export const Header: React.FC<HeaderProps> = ({ onReset }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
@@ -61,7 +60,6 @@ export const Header: React.FC<HeaderProps> = ({ onReset, onHistorySelect }) => {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)} 
         onReset={onReset || (() => {})} 
-        onHistorySelect={onHistorySelect || (() => {})}
       />
     </header>
   );

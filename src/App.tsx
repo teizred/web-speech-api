@@ -45,6 +45,9 @@ export default function App() {
   const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
   const [historyDate, setHistoryDate] = useState<string | null>(null);
+  const globalDateInputRef = useRef<HTMLInputElement>(null);
+  
+
   
   // Flag pour savoir si le changement vient d'un clic utilisateur
   const manualChangeRef = useRef(false);
@@ -160,7 +163,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24 md:pb-0">
       {/* Header McDonald's with Mobile Menu Support */}
-      <Header onReset={fetchLosses} onHistorySelect={(date) => setHistoryDate(date)} />
+      <Header onReset={fetchLosses} />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
       <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
@@ -207,7 +210,7 @@ export default function App() {
             </nav>
 
             <div className="hidden md:flex flex-col gap-4 mt-2">
-              <ExportButtons onReset={fetchLosses} onHistorySelect={(date) => setHistoryDate(date)} />
+              <ExportButtons onReset={fetchLosses} onHistorySelect={(date: string) => setHistoryDate(date)} />
             </div>
           </aside>
 
@@ -264,6 +267,20 @@ export default function App() {
           onCategoryClick={scrollToCategory} 
         />
       )}
+      {/* Hidden Global Date Picker Input (Mainly for Mobile Menu to avoid unmount bugs) */}
+      <input
+        id="global-date-input"
+        ref={globalDateInputRef}
+        type="date"
+        max={new Date().toISOString().split("T")[0]}
+        className="sr-only"
+        onChange={(e) => {
+          if (e.target.value) {
+            setHistoryDate(e.target.value);
+            e.target.value = "";
+          }
+        }}
+      />
     </div>
   );
 }
