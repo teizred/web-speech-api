@@ -136,7 +136,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ date, onClose }) => 
       <div className="relative w-full sm:max-w-lg max-h-[85vh] bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col animate-in slide-in-from-bottom duration-300 overflow-hidden">
         
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between z-10">
+        <div className="flex-none bg-white border-b border-slate-100 px-5 py-4 flex items-center justify-between z-10">
           <div>
             <h2 className="text-lg font-bold text-slate-800">📅 Historique</h2>
             <p className="text-sm text-slate-500 capitalize">{formatDate(date)}</p>
@@ -234,11 +234,11 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ date, onClose }) => 
 
         {/* Footer — Download PDF */}
         {!isLoading && losses.length > 0 && (
-          <div className="sticky bottom-0 bg-white border-t border-slate-100 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+          <div className="flex-none bg-white border-t border-slate-100 px-5 py-3 md:py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
             <button
               onClick={handleDownloadPDF}
               disabled={isDownloading}
-              className="w-full bg-[#00420b] hover:bg-[#003609] disabled:opacity-50 text-white font-bold py-3.5 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
+              className="w-full bg-[#00420b] hover:bg-[#003609] disabled:opacity-50 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98]"
             >
               {isDownloading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

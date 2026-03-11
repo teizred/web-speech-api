@@ -45,6 +45,7 @@ export default function App() {
   const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
   const [historyDate, setHistoryDate] = useState<string | null>(null);
+  const [tempDate, setTempDate] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const globalDateInputRef = useRef<HTMLInputElement>(null);
   
@@ -276,9 +277,12 @@ export default function App() {
         max={new Date().toISOString().split("T")[0]}
         className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-px opacity-0 pointer-events-none"
         onChange={(e) => {
-          if (e.target.value) {
-            setHistoryDate(e.target.value);
-            e.target.value = "";
+          setTempDate(e.target.value);
+        }}
+        onBlur={() => {
+          if (tempDate) {
+            setHistoryDate(tempDate);
+            setTempDate(null);
             setIsMenuOpen(false);
           }
         }}
