@@ -45,6 +45,7 @@ export default function App() {
   const [lossType, setLossType] = useState<'complet' | 'vide'>('vide');
   const [searchQuery, setSearchQuery] = useState("");
   const [historyDate, setHistoryDate] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const globalDateInputRef = useRef<HTMLInputElement>(null);
   
 
@@ -163,7 +164,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pb-24 md:pb-0">
       {/* Header McDonald's with Mobile Menu Support */}
-      <Header onReset={fetchLosses} />
+      <Header onReset={fetchLosses} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
       <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
@@ -273,11 +274,12 @@ export default function App() {
         ref={globalDateInputRef}
         type="date"
         max={new Date().toISOString().split("T")[0]}
-        className="sr-only"
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-px opacity-0 pointer-events-none"
         onChange={(e) => {
           if (e.target.value) {
             setHistoryDate(e.target.value);
             e.target.value = "";
+            setIsMenuOpen(false);
           }
         }}
       />

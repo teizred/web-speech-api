@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { MobileMenu } from "./MobileMenu";
 
 interface HeaderProps {
   onReset?: () => void;
+  isMenuOpen: boolean;
+  setIsMenuOpen: (open: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onReset }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export const Header: React.FC<HeaderProps> = ({ onReset, isMenuOpen, setIsMenuOpen }) => {
 
   return (
     <header className="bg-[#00420b] text-white shadow-md sticky top-0 z-40 pt-[env(safe-area-inset-top,0px)]">

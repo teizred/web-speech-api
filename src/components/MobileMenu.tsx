@@ -107,7 +107,17 @@ export const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, onReset
 
           <label
             htmlFor="global-date-input"
-            onClick={onClose}
+            onClick={() => {
+              // Fallback JS pour forcer l'ouverture si le label ne suffit pas
+              const input = document.getElementById("global-date-input") as HTMLInputElement;
+              if (input) {
+                try {
+                  input.showPicker();
+                } catch (err) {
+                  // Fallback automatique via htmlFor
+                }
+              }
+            }}
             className="w-full flex items-center gap-3 p-4 bg-slate-50 rounded-2xl font-bold text-slate-700 active:scale-95 transition-all border border-slate-100 cursor-pointer"
           >
             <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
