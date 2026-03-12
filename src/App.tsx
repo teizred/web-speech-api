@@ -146,26 +146,43 @@ export default function App() {
     return () => observer.disconnect();
   }, [categories]);
 
-  // Fonction pour scroller vers une catégorie
+  // Fonction pour scroller vers une catégorie avec une vitesse personnalisée et fluide
   const scrollToCategory = (label: string) => {
     const id = label.toLowerCase().replace(/\s+/g, '-');
     const element = document.getElementById(id);
     if (element) {
       setActiveCategory(label);
       
-      // Décalage adaptatif pour mobile/desktop (prend en compte le header + contrôles sticky)
       const isMobile = window.innerWidth < 768;
       const offset = isMobile ? 210 : 160; 
       
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
       const elementPosition = elementRect - bodyRect;
-      const offsetPosition = elementPosition - offset;
+      const targetPosition = elementPosition - offset;
+      
+      const startPosition = window.pageYOffset;
+      const distance = targetPosition - startPosition;
+      const duration = 800; // Durée en ms (contre ~300ms par défaut en CSS)
+      let start: number | null = null;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+      const animation = (currentTime: number) => {
+        if (start === null) start = currentTime;
+        const timeElapsed = currentTime - start;
+        const run = easeInOutCubic(timeElapsed, startPosition, distance, duration);
+        window.scrollTo(0, run);
+        if (timeElapsed < duration) requestAnimationFrame(animation);
+      };
+
+      // Fonction d'easing cubique pour un effet premium
+      function easeInOutCubic(t: number, b: number, c: number, d: number) {
+        t /= d / 2;
+        if (t < 1) return c / 2 * t * t * t + b;
+        t -= 2;
+        return c / 2 * (t * t * t + 2) + b;
+      }
+
+      requestAnimationFrame(animation);
     }
   };
 

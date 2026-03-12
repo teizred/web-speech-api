@@ -15,13 +15,17 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
+      // Touch-action none aide à bloquer le scroll sur mobile
+      document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -50,8 +54,9 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity duration-300 touch-none"
           onClick={() => setIsOpen(false)}
+          onPointerMove={(e) => e.preventDefault()} // Empêche le scroll par le backdrop
         />
       )}
 
