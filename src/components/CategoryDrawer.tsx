@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { ProductCategory } from '../App';
 
 interface CategoryDrawerProps {
@@ -9,6 +9,18 @@ interface CategoryDrawerProps {
 
 export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, activeCategory, onCategoryClick }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Bloquer le scroll du corps quand le drawer est ouvert
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleCategoryClick = (label: string) => {
     onCategoryClick(label);

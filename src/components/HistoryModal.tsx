@@ -24,6 +24,14 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({ date, onClose }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // Bloquer le scroll du corps quand la modale est ouverte
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   // On charge les pertes de la date sélectionnée
   useEffect(() => {
     const fetchLosses = async () => {
