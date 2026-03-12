@@ -97,18 +97,18 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
                     }
                   `}
                 >
-                  <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 flex items-center justify-center shrink-0">
                     {isImageIcon ? (
-                      <img src={cat.icon!} alt={cat.label} className="w-8 h-8 object-contain" />
+                      <img src={cat.icon!} alt={cat.label} className="w-10 h-10 object-contain" />
                     ) : (
-                      <span className="text-2xl">{cat.icon || "📦"}</span>
+                      <span className="text-3xl">{cat.icon || "📦"}</span>
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className={`font-bold text-sm ${isActive ? 'text-white' : 'text-slate-800'}`}>
+                    <p className={`font-bold text-base ${isActive ? 'text-white' : 'text-slate-800'}`}>
                       {cat.label}
                     </p>
-                    <p className={`text-[10px] uppercase font-medium tracking-wider mt-0.5 ${isActive ? 'text-green-100' : 'text-slate-400'}`}>
+                    <p className={`text-xs uppercase font-bold tracking-wider mt-0.5 ${isActive ? 'text-green-100' : 'text-slate-400'}`}>
                       {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length} produits
                     </p>
                   </div>

@@ -175,11 +175,11 @@ export default function App() {
       <Header onReset={fetchLosses} isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
 
       {/* Contenu principal — layout adaptatif selon le wireframe */}
-      <div className="p-4 md:p-6 max-w-lg mx-auto md:max-w-none md:mx-6 lg:mx-8 w-full">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6">
         <div className="flex flex-col md:flex-row md:gap-6 lg:gap-8 items-start">
           
           {/* Colonne gauche : micro + catégories (side) + export (Desktop) */}
-          <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-4 flex flex-col gap-1.5 md:gap-4 md:h-[calc(100vh-2rem)] md:overflow-y-auto no-scrollbar">
+          <aside className="w-full md:w-[300px] lg:w-[340px] md:shrink-0 md:sticky md:top-[88px] flex flex-col gap-1.5 md:gap-4 md:h-[calc(100vh-110px)] md:overflow-y-auto no-scrollbar">
             <AddLoss onLossAdded={fetchLosses} />
             
             {/* Barre de contrôles (Desktop uniquement ici, car Mobile est géré plus bas pour être globalement sticky) */}
@@ -198,23 +198,23 @@ export default function App() {
                   <button
                     key={cat.label}
                     onClick={() => scrollToCategory(cat.label)}
-                    className={`w-full justify-start px-4 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-3 active:scale-[0.98]
+                    className={`w-full justify-start px-5 py-4 rounded-2xl text-base font-bold transition-all flex items-center gap-4 active:scale-[0.98]
                       ${isActive ? 'bg-[#FFC72C] text-slate-900 shadow-md ring-2 ring-[#FFC72C]/20' : 'hover:bg-slate-100 text-slate-700'}
                     `}
                   >
                     {cat.icon ? (
                       cat.icon.startsWith('/') || cat.icon.startsWith('http') ? (
-                        <img src={cat.icon} alt={cat.label} className="w-6 h-6 object-contain rounded-sm" />
+                        <img src={cat.icon} alt={cat.label} className="w-9 h-9 object-contain rounded-md" />
                       ) : (
-                        <span className="text-xl w-6 h-6 flex items-center justify-center">{cat.icon}</span>
+                        <span className="text-3xl w-9 h-9 flex items-center justify-center">{cat.icon}</span>
                       )
                     ) : (
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>
+                      <span className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>
                         {cat.label.charAt(0)}
                       </span>
                     )}
-                    <span className="flex-1 text-left">{cat.label}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-black/10 text-slate-900' : 'bg-slate-100 text-slate-400'}`}>
+                    <span className="flex-1 text-left leading-tight">{cat.label}</span>
+                    <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${isActive ? 'bg-black/10 text-slate-900' : 'bg-slate-100 text-slate-400'}`}>
                       {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length}
                     </span>
                   </button>
