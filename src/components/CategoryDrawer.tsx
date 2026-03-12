@@ -13,32 +13,25 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
   // Bloquer le scroll du corps quand le drawer est ouvert
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100% ';
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
+      document.documentElement.style.overflow = '';
     }
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [isOpen]);
 
   const handleCategoryClick = (label: string) => {
-    onCategoryClick(label);
     setIsOpen(false);
+    // Plus besoin de setTimeout long car on ne restaure plus de position forcée
+    // Un micro-délai pour laisser le drawer commencer à se fermer
+    requestAnimationFrame(() => {
+      onCategoryClick(label);
+    });
   };
 
   return (
