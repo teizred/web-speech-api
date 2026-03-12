@@ -273,8 +273,8 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
       {filteredCategories.map((group) => {
         const categoryId = group.label.toLowerCase().replace(/\s+/g, '-');
         return (
-          <div key={group.label} id={categoryId} className="space-y-6 scroll-mt-[180px] md:scroll-mt-[130px]">
-            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+168px)] md:top-[calc(env(safe-area-inset-top,0px)+112px)] bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-200/50">
+          <div key={group.label} id={categoryId} className="space-y-6 scroll-mt-[210px] md:scroll-mt-[160px]">
+            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+192px)] md:top-[calc(env(safe-area-inset-top,0px)+122px)] bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-200/50">
               <h3 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-[0.1em] px-1">
                 {group.label}
               </h3>

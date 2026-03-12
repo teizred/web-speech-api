@@ -3,7 +3,7 @@ import { Header } from "./components/Header";
 import { AddLoss } from "./components/AddLoss";
 import { LossTable } from "./components/LossTable";
 import { ExportButtons } from "./components/ExportButtons";
-import { BottomNav } from "./components/BottomNav";
+import { CategoryDrawer } from "./components/CategoryDrawer";
 import { API_BASE_URL } from "./config/api";
 import { LossTypeTabs } from "./components/LossTypeTabs";
 import { HistoryModal } from "./components/HistoryModal";
@@ -118,7 +118,7 @@ export default function App() {
   // Detection de la section active pour la bottom nav
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    const margin = isMobile ? "-180px 0px -80% 0px" : "-130px 0px -85% 0px";
+    const margin = isMobile ? "-210px 0px -80% 0px" : "-160px 0px -85% 0px";
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -155,7 +155,7 @@ export default function App() {
       
       // Décalage adaptatif pour mobile/desktop (prend en compte le header + contrôles sticky)
       const isMobile = window.innerWidth < 768;
-      const offset = isMobile ? 180 : 130; 
+      const offset = isMobile ? 210 : 160; 
       
       const bodyRect = document.body.getBoundingClientRect().top;
       const elementRect = element.getBoundingClientRect().top;
@@ -203,7 +203,11 @@ export default function App() {
                     `}
                   >
                     {cat.icon ? (
-                      <img src={cat.icon} alt={cat.label} className="w-6 h-6 object-contain rounded-sm" />
+                      cat.icon.startsWith('/') || cat.icon.startsWith('http') ? (
+                        <img src={cat.icon} alt={cat.label} className="w-6 h-6 object-contain rounded-sm" />
+                      ) : (
+                        <span className="text-xl w-6 h-6 flex items-center justify-center">{cat.icon}</span>
+                      )
                     ) : (
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>
                         {cat.label.charAt(0)}
@@ -268,9 +272,9 @@ export default function App() {
         <HistoryModal date={historyDate} onClose={() => setHistoryDate(null)} />
       )}
 
-      {/* Barre de navigation basse (Mobile uniquement — cachée quand l'historique est ouvert) */}
+      {/* Category Drawer (Mobile uniquement — caché quand l'historique est ouvert) */}
       {!historyDate && (
-        <BottomNav 
+        <CategoryDrawer 
           categories={categories} 
           activeCategory={activeCategory} 
           onCategoryClick={scrollToCategory} 
