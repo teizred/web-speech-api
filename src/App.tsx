@@ -9,6 +9,7 @@ import { LossTypeTabs } from "./components/LossTypeTabs";
 import { HistoryModal } from "./components/HistoryModal";
 import { BottomNav, type AppTab } from "./components/BottomNav";
 import { ExportView } from "./components/ExportView";
+import { InventoryView } from "./components/InventoryView";
 
 interface Loss {
   id: number;
@@ -202,6 +203,11 @@ export default function App() {
               />
             </div>
           </div>
+        )}
+
+        {/* ── Tab: Inventaire (Gestion des produits et totaux mensuels) ── */}
+        {activeTab === 'inventaire' && (
+          <InventoryView />
         )}
 
         {/* ── Tab: Exporter (PDF + Email + Historique + Reset) ── */}
