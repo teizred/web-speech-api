@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { API_BASE_URL } from "../config/api";
 import type { ProductCategory, ProductItem } from "../App";
 
@@ -17,12 +17,15 @@ interface LossTableProps {
   searchQuery: string;
   onUpdate: () => void;
 }
-const ProductCard = React.memo(({ 
-  product, 
-  size, 
-  initialQuantity, 
-  existingLossId, 
-  onUpdate 
+
+// ─── Product Card ─────────────────────────────────────────────────────────────
+
+const ProductCard = React.memo(({
+  product,
+  size,
+  initialQuantity,
+  existingLossId,
+  onUpdate,
 }: {
   product: ProductItem;
   size: string | null;
@@ -30,38 +33,42 @@ const ProductCard = React.memo(({
   existingLossId: number | null;
   onUpdate: () => void;
 }) => {
-  const [quantity, setQuantity] = useState(initialQuantity);
-  const [isLoading, setIsLoading] = useState(false);
+  const [quantity, setQuantity] = React.useState(initialQuantity);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   React.useEffect(() => {
     setQuantity(initialQuantity);
   }, [initialQuantity]);
 
   const handleQuantityChange = async (delta: number) => {
-    const actualDelta = (product.unit_type === 'weight' || product.unit_type === 'liquid') ? delta * 100 : delta;
+    const actualDelta =
+      product.unit_type === 'weight' || product.unit_type === 'liquid' ? delta * 100 : delta;
     const newQuantity = Math.max(0, quantity + actualDelta);
     setQuantity(newQuantity);
-
     setIsLoading(true);
     try {
       if (existingLossId) {
         await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             quantity: newQuantity,
-            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
+            unit:
+              product.unit_type === 'weight' ? 'g' :
+              product.unit_type === 'liquid' ? 'ml' : 'pieces',
           }),
         });
       } else if (delta > 0) {
         await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            product: product.name, 
-            quantity: actualDelta, 
+          body: JSON.stringify({
+            product: product.name,
+            quantity: actualDelta,
             size,
-            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
+            unit:
+              product.unit_type === 'weight' ? 'g' :
+              product.unit_type === 'liquid' ? 'ml' : 'pieces',
           }),
         });
       }
@@ -80,36 +87,39 @@ const ProductCard = React.memo(({
   };
 
   const saveManualEdit = async () => {
-    if (quantity === initialQuantity) return; // Pas de changement
+    if (quantity === initialQuantity) return;
     if (quantity < 0) return;
-
     setIsLoading(true);
     try {
       if (existingLossId) {
         await fetch(`${API_BASE_URL}/api/losses/${existingLossId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            quantity: quantity,
-            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
+          body: JSON.stringify({
+            quantity,
+            unit:
+              product.unit_type === 'weight' ? 'g' :
+              product.unit_type === 'liquid' ? 'ml' : 'pieces',
           }),
         });
       } else if (quantity > 0) {
         await fetch(`${API_BASE_URL}/api/losses/manual`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            product: product.name, 
-            quantity: quantity, 
+          body: JSON.stringify({
+            product: product.name,
+            quantity,
             size,
-            unit: product.unit_type === 'weight' ? 'g' : (product.unit_type === 'liquid' ? 'ml' : 'pieces')
+            unit:
+              product.unit_type === 'weight' ? 'g' :
+              product.unit_type === 'liquid' ? 'ml' : 'pieces',
           }),
         });
       }
       onUpdate();
     } catch (e) {
       console.error(e);
-      setQuantity(initialQuantity); // Rollback
+      setQuantity(initialQuantity);
       onUpdate();
     } finally {
       setIsLoading(false);
@@ -117,60 +127,78 @@ const ProductCard = React.memo(({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.currentTarget.blur();
-    }
+    if (e.key === 'Enter') e.currentTarget.blur();
   };
+
+  const hasLoss = quantity > 0;
+  const unitLabel =
+    product.unit_type === 'weight' ? (quantity >= 1000 ? `${(quantity / 1000).toFixed(2)} kg` : `${quantity} g`) :
+    product.unit_type === 'liquid' ? (quantity >= 1000 ? `${(quantity / 1000).toFixed(2)} L` : `${quantity} ml`) :
+    null;
+  const badge =
+    product.unit_type === 'weight' ? 'g / kg' :
+    product.unit_type === 'liquid' ? 'ml / L' :
+    product.unit_type === 'pieces' ? 'pièces' : null;
 
   return (
     <div
-      className={`
-        relative bg-white rounded-xl border shadow-sm p-3 flex flex-col items-center gap-2 text-center transition-all
-        ${quantity > 0 ? 'border-red-200 ring-1 ring-red-100' : 'border-slate-100'}
-      `}
+      className="relative flex flex-col rounded-2xl transition-all duration-200"
+      style={{
+        background: hasLoss ? '#fff5f5' : '#ffffff',
+        border: hasLoss ? '2px solid #fecaca' : '2px solid #f1f5f9',
+        boxShadow: hasLoss
+          ? '0 2px 8px rgba(239,68,68,0.1)'
+          : '0 1px 4px rgba(0,0,0,0.05)',
+      }}
     >
-      <div className="flex flex-col justify-center min-h-[44px] w-full">
-        <span className={`text-sm md:text-base font-bold leading-tight ${quantity > 0 ? 'text-slate-900' : 'text-slate-600'}`}>
+      {/* Top content */}
+      <div className="flex flex-col items-center justify-center text-center px-2 pt-4 pb-2 flex-1 min-h-[64px]">
+        <span className={`text-sm font-black leading-tight ${hasLoss ? 'text-slate-900' : 'text-slate-600'}`}>
           {product.name}
         </span>
-        {size && (
-          <span className="text-xs text-slate-500 font-medium">{size}</span>
+        {size && <span className="text-[11px] text-slate-400 font-semibold mt-0.5">{size}</span>}
+
+        {/* Unit badge */}
+        {badge && (
+          <span
+            className="text-[9px] font-black uppercase tracking-wider mt-1 px-1.5 py-0.5 rounded-md"
+            style={{
+              background: product.unit_type === 'weight' ? '#fff7ed' :
+                          product.unit_type === 'liquid' ? '#eff6ff' : '#eff6ff',
+              color: product.unit_type === 'weight' ? '#ea580c' :
+                     product.unit_type === 'liquid' ? '#2563eb' : '#2563eb',
+            }}
+          >
+            {badge}
+          </span>
         )}
-        
-        {product.unit_type === 'weight' && (
-          <div className="flex flex-col items-center">
-            {quantity > 0 && (
-              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} kg)` : "g"}
-              </span>
-            )}
-            <span className="text-[9px] text-orange-500 font-bold uppercase tracking-tighter mt-0.5">g / kg</span>
-          </div>
-        )}
-        {product.unit_type === 'liquid' && (
-          <div className="flex flex-col items-center">
-            {quantity > 0 && (
-              <span className={`text-[10px] mt-1 font-medium ${quantity >= 1000 ? 'text-blue-600 font-bold' : 'text-slate-400'}`}>
-                {quantity >= 1000 ? `(${(quantity / 1000).toFixed(2)} L)` : "ml"}
-              </span>
-            )}
-            <span className="text-[9px] text-cyan-600 font-bold uppercase tracking-tighter mt-0.5">ml / L</span>
-          </div>
-        )}
-        {product.unit_type === 'pieces' && (
-          <span className="text-[9px] text-blue-500 font-bold uppercase tracking-tighter">pièces</span>
+        {hasLoss && unitLabel && (
+          <span className="text-[10px] font-bold text-red-500 mt-0.5">{unitLabel}</span>
         )}
       </div>
 
-      <div className="flex items-center gap-2 bg-slate-50 rounded-lg p-1 w-full justify-between mt-auto">
+      {/* Controls row */}
+      <div
+        className="flex items-center justify-between px-2 pb-3"
+        style={{ gap: 4 }}
+      >
+        {/* Minus */}
         <button
           onClick={() => handleQuantityChange(-1)}
           disabled={isLoading || quantity === 0}
-          className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-400 hover:text-red-500 active:scale-90 transition-all disabled:opacity-30"
+          className="flex items-center justify-center rounded-xl active:scale-90 transition-all disabled:opacity-25"
+          style={{
+            width: 44,
+            height: 44,
+            background: hasLoss ? '#fee2e2' : '#f1f5f9',
+            color: hasLoss ? '#dc2626' : '#64748b',
+            flexShrink: 0,
+          }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
 
+        {/* Quantity input */}
         <input
           type="number"
           value={quantity === 0 ? "" : quantity}
@@ -178,40 +206,54 @@ const ProductCard = React.memo(({
           onChange={handleEditChange}
           onBlur={saveManualEdit}
           onKeyDown={handleKeyDown}
-          className={`w-14 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none
-            ${quantity > 0 ? 'text-red-600 font-bold' : 'text-slate-400'}
-          `}
+          className="flex-1 text-center border-0 bg-transparent text-sm p-0 focus:ring-0 outline-none min-w-0"
+          style={{
+            fontWeight: 900,
+            color: hasLoss ? '#dc2626' : '#94a3b8',
+            fontSize: hasLoss ? 16 : 14,
+          }}
         />
 
+        {/* Plus */}
         <button
           onClick={() => handleQuantityChange(1)}
           disabled={isLoading}
-          className="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 hover:text-green-600 active:scale-90 transition-all"
+          className="flex items-center justify-center rounded-xl active:scale-90 transition-all"
+          style={{
+            width: 44,
+            height: 44,
+            background: '#00420b',
+            color: '#ffffff',
+            flexShrink: 0,
+          }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
       </div>
 
+      {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center z-20">
-          <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] rounded-2xl flex items-center justify-center z-20">
+          <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
         </div>
       )}
     </div>
   );
 });
 
-// Le tableau qui affiche toutes les pertes avec les boutons + et -
-export const LossTable: React.FC<LossTableProps> = ({ losses, categories, searchQuery, onUpdate }) => {
-  
-  // Create a memoized map of losses for quick lookup
+// ─── Main LossTable ───────────────────────────────────────────────────────────
+
+export const LossTable: React.FC<LossTableProps> = ({
+  losses,
+  categories,
+  searchQuery,
+  onUpdate,
+}) => {
   const initialQuantities = React.useMemo(() => {
     const map: Record<string, { quantity: number; id: number | null }> = {};
-    losses.forEach(loss => {
+    losses.forEach((loss) => {
       const key = `${loss.product}__${loss.size || "null"}`;
-      if (!map[key]) {
-        map[key] = { quantity: 0, id: loss.id };
-      }
+      if (!map[key]) map[key] = { quantity: 0, id: loss.id };
       map[key].quantity += loss.quantity;
     });
     return map;
@@ -222,31 +264,23 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
     return [null];
   };
 
-  const filterProducts = (products: ProductItem[]) => {
-    return products.filter(product => 
-      product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  };
+  const filterProducts = (products: ProductItem[]) =>
+    products.filter((p) => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-  const filteredCategories = categories.map((group: ProductCategory) => {
-    const filteredSubcategories = group.subcategories.map((sub: any) => ({
-      ...sub,
-      products: filterProducts(sub.products)
-    })).filter((sub: any) => sub.products.length > 0);
-    const filteredDirectProducts = filterProducts(group.products);
-    return {
-      ...group,
-      subcategories: filteredSubcategories,
-      products: filteredDirectProducts
-    };
-  }).filter((group: any) => group.subcategories.length > 0 || (group.products && group.products.length > 0));
+  const filteredCategories = categories
+    .map((group) => {
+      const filteredSubs = group.subcategories
+        .map((sub) => ({ ...sub, products: filterProducts(sub.products) }))
+        .filter((sub) => sub.products.length > 0);
+      const filteredDirect = filterProducts(group.products);
+      return { ...group, subcategories: filteredSubs, products: filteredDirect };
+    })
+    .filter((g) => g.subcategories.length > 0 || g.products.length > 0);
 
-  const renderProduct = (product: ProductItem) => {
-    const sizes = getSizes(product);
-    return sizes.map((size) => {
+  const renderProduct = (product: ProductItem) =>
+    getSizes(product).map((size) => {
       const key = `${product.name}__${size || "null"}`;
       const lossData = initialQuantities[key] || { quantity: 0, id: null };
-
       return (
         <ProductCard
           key={key}
@@ -258,40 +292,49 @@ export const LossTable: React.FC<LossTableProps> = ({ losses, categories, search
         />
       );
     });
-  };
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Search Input removed from here - now managed by App.tsx */}
-
+    <div className="space-y-8 pb-4 md:pb-12">
       {filteredCategories.length === 0 && (
         <div className="py-20 text-center text-slate-400">
-          <p>Aucun produit trouvé</p>
+          <p className="text-4xl mb-3">🔍</p>
+          <p className="font-semibold">Aucun produit trouvé</p>
         </div>
       )}
 
       {filteredCategories.map((group) => {
         const categoryId = group.label.toLowerCase().replace(/\s+/g, '-');
         return (
-          <div key={group.label} id={categoryId} className="space-y-6 scroll-mt-[210px] md:scroll-mt-[160px]">
-            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+192px)] md:top-[calc(env(safe-area-inset-top,0px)+122px)] bg-slate-50/95 backdrop-blur z-10 py-2 border-b border-slate-200/50">
-              <h3 className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-[0.1em] px-1">
-                {group.label}
-              </h3>
+          <div key={group.label} id={categoryId} className="space-y-4 scroll-mt-[210px] md:scroll-mt-[160px]">
+            {/* Category header */}
+            <div
+              className="sticky z-10 py-2 px-1 bg-slate-50/95 backdrop-blur-sm"
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 56px + 116px)' }}
+            >
+              <div className="flex items-center gap-2">
+                {group.icon && (
+                  group.icon.startsWith('/') || group.icon.startsWith('http') ? (
+                    <img src={group.icon} alt="" className="w-5 h-5 object-contain" />
+                  ) : (
+                    <span className="text-base">{group.icon}</span>
+                  )
+                )}
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-[0.12em]">
+                  {group.label}
+                </h3>
+              </div>
             </div>
 
             {group.products.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 {group.products.flatMap(renderProduct)}
               </div>
             )}
 
             {group.subcategories.map((sub) => (
-              <div key={sub.name} className="space-y-3">
-                <h4 className="text-xs md:text-sm font-bold text-slate-400 px-1 italic">
-                  — {sub.name}
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div key={sub.name} className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-400 px-1 italic">— {sub.name}</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {sub.products.flatMap(renderProduct)}
                 </div>
               </div>

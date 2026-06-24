@@ -15,7 +15,6 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
     if (isOpen) {
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
-      // Touch-action none aide à bloquer le scroll sur mobile
       document.body.style.touchAction = 'none';
     } else {
       document.body.style.overflow = '';
@@ -31,8 +30,6 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
 
   const handleCategoryClick = (label: string) => {
     setIsOpen(false);
-    // Plus besoin de setTimeout long car on ne restaure plus de position forcée
-    // Un micro-délai pour laisser le drawer commencer à se fermer
     requestAnimationFrame(() => {
       onCategoryClick(label);
     });
@@ -40,60 +37,65 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
 
   return (
     <>
-      {/* Bouton Fixe en bas au centre */}
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+      {/* Floating Categories Button — mobile only, sits above the bottom nav */}
+      <div
+        className="md:hidden fixed left-1/2 -translate-x-1/2 z-40"
+        style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 12px)' }}
+      >
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2 bg-[#00420b] text-white px-6 py-3 rounded-full shadow-lg shadow-green-900/20 active:scale-95 transition-all border border-white/10"
+          className="flex items-center gap-2 text-white px-5 py-3 rounded-full active:scale-95 transition-all"
+          style={{
+            background: '#00420b',
+            boxShadow: '0 4px 16px rgba(0,66,11,0.4)',
+            border: '1.5px solid rgba(255,255,255,0.15)',
+          }}
         >
-          <span className="text-xl">🗂️</span>
-          <span className="font-bold text-sm uppercase tracking-wide">Catégories</span>
+          <span className="text-lg">🗂️</span>
+          <span className="font-black text-sm uppercase tracking-wide">Catégories</span>
         </button>
       </div>
 
       {/* Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity duration-300 touch-none"
           onClick={() => setIsOpen(false)}
-          onPointerMove={(e) => e.preventDefault()} // Empêche le scroll par le backdrop
+          onPointerMove={(e) => e.preventDefault()}
         />
       )}
 
-      {/* Bottom Sheet Drawer */}
-      <div 
+      {/* Bottom Sheet Drawer — mobile + desktop */}
+      <div
         className={`
-          md:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out transform
+          fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out transform
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}
-          pb-[max(1rem,env(safe-area-inset-bottom,20px))]
         `}
+        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 20px))' }}
       >
-        {/* Barre de drag */}
+        {/* Drag handle */}
         <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-3 mb-2" />
-        
-        <div className="px-6 py-4">
+
+        <div className="px-5 py-3">
           <h3 className="text-lg font-black text-slate-800 mb-4 flex items-center gap-2">
             📂 <span className="uppercase tracking-tight">Toutes les catégories</span>
           </h3>
-          
-          <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto no-scrollbar py-2">
+
+          <div className="grid grid-cols-1 gap-2 overflow-y-auto no-scrollbar" style={{ maxHeight: '60vh' }}>
             {categories.map((cat) => {
               const isActive = activeCategory === cat.label;
-              
-              // On vérifie si l'icône est un chemin d'image ou un emoji
               const isImageIcon = cat.icon && (cat.icon.startsWith('/') || cat.icon.startsWith('http'));
 
               return (
                 <button
                   key={cat.label}
                   onClick={() => handleCategoryClick(cat.label)}
-                  className={`
-                    flex items-center gap-4 w-full p-4 rounded-2xl text-left transition-all active:scale-[0.98]
-                    ${isActive 
-                      ? 'bg-[#264F36] text-white shadow-md ring-2 ring-[#264F36]/20' 
-                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-100'
-                    }
-                  `}
+                  className="flex items-center gap-4 w-full p-4 rounded-2xl text-left transition-all active:scale-[0.98]"
+                  style={{
+                    background: isActive ? '#00420b' : '#f8fafc',
+                    border: isActive ? '2px solid #00420b' : '2px solid #f1f5f9',
+                    boxShadow: isActive ? '0 2px 10px rgba(0,66,11,0.25)' : 'none',
+                  }}
                 >
                   <div className="w-12 h-12 flex items-center justify-center shrink-0">
                     {isImageIcon ? (
@@ -106,24 +108,22 @@ export const CategoryDrawer: React.FC<CategoryDrawerProps> = ({ categories, acti
                     <p className={`font-bold text-base ${isActive ? 'text-white' : 'text-slate-800'}`}>
                       {cat.label}
                     </p>
-                    <p className={`text-xs uppercase font-bold tracking-wider mt-0.5 ${isActive ? 'text-green-100' : 'text-slate-400'}`}>
+                    <p className={`text-xs uppercase font-bold tracking-wider mt-0.5 ${isActive ? 'text-green-200' : 'text-slate-400'}`}>
                       {cat.subcategories.reduce((acc, sub) => acc + sub.products.length, 0) + cat.products.length} produits
                     </p>
                   </div>
-                  {isActive && (
-                    <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  )}
+                  {isActive && <div className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />}
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* Bouton fermer en bas */}
-        <div className="px-6 mt-2">
-          <button 
+        <div className="px-5 mt-1">
+          <button
             onClick={() => setIsOpen(false)}
-            className="w-full py-4 text-slate-400 font-bold text-sm uppercase tracking-widest bg-slate-50 rounded-2xl"
+            className="w-full py-4 font-bold text-sm uppercase tracking-widest rounded-2xl"
+            style={{ background: '#f8fafc', color: '#94a3b8' }}
           >
             Fermer
           </button>

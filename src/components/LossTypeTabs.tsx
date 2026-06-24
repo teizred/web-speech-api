@@ -7,29 +7,32 @@ interface LossTypeTabsProps {
 
 export const LossTypeTabs: React.FC<LossTypeTabsProps> = ({ activeType, onChange }) => {
   return (
-    <div className="flex p-1 bg-white/50 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm md:mb-6 md:mx-4">
-      <button
-        onClick={() => onChange('vide')}
-        className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-          activeType === 'vide'
-            ? 'bg-[#00420b] text-white shadow-lg shadow-[#00420b]/20'
-            : 'text-slate-600 hover:bg-slate-100'
-        }`}
-      >
-        <img src="/vide.png" alt="Pertes Vides" className="w-8 h-8 object-contain" />
-        Pertes Vides
-      </button>
-      <button
-        onClick={() => onChange('complet')}
-        className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-          activeType === 'complet'
-            ? 'bg-[#00420b] text-white shadow-lg shadow-[#00420b]/20'
-            : 'text-slate-600 hover:bg-slate-100'
-        }`}
-      >
-        <img src="/complet.png" alt="Pertes Complètes" className="w-8 h-8 object-contain" />
-        Pertes Complètes
-      </button>
+    <div
+      className="flex p-1 rounded-2xl"
+      style={{
+        background: 'rgba(0,0,0,0.06)',
+      }}
+    >
+      {(['vide', 'complet'] as const).map((type) => {
+        const isActive = activeType === type;
+        const label = type === 'vide' ? 'Pertes Vides' : 'Pertes Complètes';
+        const imgSrc = type === 'vide' ? '/vide.png' : '/complet.png';
+        return (
+          <button
+            key={type}
+            onClick={() => onChange(type)}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-[0.97]"
+            style={{
+              background: isActive ? '#00420b' : 'transparent',
+              color: isActive ? '#ffffff' : '#64748b',
+              boxShadow: isActive ? '0 2px 8px rgba(0,66,11,0.3)' : 'none',
+            }}
+          >
+            <img src={imgSrc} alt={label} className="w-7 h-7 object-contain" />
+            <span className="leading-none">{label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };
